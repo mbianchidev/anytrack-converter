@@ -173,8 +173,9 @@ async fn convert_audio(
         }
         
         // Apply fade out (3 seconds from end)
+        // FFmpeg will automatically calculate from the end when st is not specified
         if fade_out {
-            filters.push("afade=t=out:st=-3:d=3".to_string());
+            filters.push("afade=t=out:d=3".to_string());
         }
 
         // Apply filters if any exist
