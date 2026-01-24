@@ -232,6 +232,26 @@ anytrack-converter/
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+## Security
+
+### Production Considerations
+
+When deploying this application in production, please consider the following security measures:
+
+1. **CORS Configuration**: Update the backend CORS settings to restrict allowed origins instead of using `allow_any_origin()`
+2. **HTTPS**: Always use HTTPS in production environments
+3. **File Upload Limits**: Configure appropriate file size limits to prevent abuse
+4. **Rate Limiting**: Implement rate limiting to prevent denial of service attacks
+5. **Input Validation**: Validate YouTube URLs and file types on both client and server
+6. **Temporary File Cleanup**: Monitor disk space and implement cleanup policies for old files
+7. **Environment Variables**: Use environment variables for sensitive configuration
+
+### Known Limitations
+
+- Temporary files are stored locally and should be cleaned up regularly
+- No authentication/authorization system is included
+- File storage is not distributed or replicated
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
