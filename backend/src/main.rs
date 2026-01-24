@@ -10,12 +10,6 @@ use std::process::Command;
 use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize)]
-struct ConversionRequest {
-    format: String,
-    quality: Option<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
 struct YouTubeRequest {
     url: String,
     format: String,
@@ -153,7 +147,9 @@ async fn convert_audio(
         }
 
         // Clean up input file
-        let _ = fs::remove_file(input_path);
+        if let Err(e) = fs::remove_file(&input_path) {
+            eprintln!("Warning: Failed to clean up input file: {}", e);
+        }
 
         Ok(HttpResponse::Ok().json(ApiResponse {
             success: true,
@@ -221,7 +217,9 @@ async fn convert_youtube(
     })?;
 
     // Clean up temp video
-    let _ = fs::remove_file(temp_video);
+    if let Err(e) = fs::remove_file(&temp_video) {
+        eprintln!("Warning: Failed to clean up temp video: {}", e);
+    }
 
     if !ffmpeg_output.status.success() {
         return Ok(HttpResponse::InternalServerError().json(ApiResponse {
@@ -326,7 +324,9 @@ async fn update_metadata(
         })?;
 
         // Clean up input file
-        let _ = fs::remove_file(input_path);
+        if let Err(e) = fs::remove_file(&input_path) {
+            eprintln!("Warning: Failed to clean up input file: {}", e);
+        }
 
         if !output.status.success() {
             return Ok(HttpResponse::InternalServerError().json(ApiResponse {
@@ -378,6 +378,8 @@ async fn main() -> std::io::Result<()> {
     println!("Starting Anytrack Converter API on http://0.0.0.0:8080");
 
     HttpServer::new(move || {
+        // CORS configuration - NOTE: In production, restrict allowed origins
+        // instead of using allow_any_origin() for better security
         let cors = Cors::default()
             .allow_any_origin()
             .allow_any_method()
