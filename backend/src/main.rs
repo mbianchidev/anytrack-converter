@@ -7,7 +7,6 @@ use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
-use tempfile::TempDir;
 use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -62,15 +61,19 @@ async fn convert_audio(
     // Process multipart form data
     while let Ok(Some(mut field)) = payload.try_next().await {
         let content_disposition = field.content_disposition();
-        let field_name = content_disposition.get_name().unwrap_or("");
+        let field_name = content_disposition
+            .as_ref()
+            .and_then(|cd| cd.get_name())
+            .unwrap_or("")
+            .to_string();
+        let filename_opt = content_disposition
+            .and_then(|cd| cd.get_filename())
+            .map(|s| s.to_string());
 
-        match field_name {
+        match field_name.as_str() {
             "file" => {
-                let filename = content_disposition
-                    .get_filename()
-                    .unwrap_or("upload")
-                    .to_string();
-                let filepath = data.upload_dir.join(format!("{}_{}", file_id, filename));
+                let filename = filename_opt.unwrap_or_else(|| "upload".to_string());
+                let filepath = data.upload_dir.join(format!("{}_{}", file_id, &filename));
 
                 let mut f = web::block(move || std::fs::File::create(filepath.clone()))
                     .await?
@@ -254,19 +257,23 @@ async fn update_metadata(
     // Process multipart form data
     while let Ok(Some(mut field)) = payload.try_next().await {
         let content_disposition = field.content_disposition();
-        let field_name = content_disposition.get_name().unwrap_or("");
+        let field_name = content_disposition
+            .as_ref()
+            .and_then(|cd| cd.get_name())
+            .unwrap_or("")
+            .to_string();
+        let filename_opt = content_disposition
+            .and_then(|cd| cd.get_filename())
+            .map(|s| s.to_string());
 
         let mut bytes = Vec::new();
         while let Ok(Some(chunk)) = field.try_next().await {
             bytes.extend_from_slice(&chunk);
         }
 
-        match field_name {
+        match field_name.as_str() {
             "file" => {
-                let filename = content_disposition
-                    .get_filename()
-                    .unwrap_or("upload")
-                    .to_string();
+                let filename = filename_opt.unwrap_or_else(|| "upload".to_string());
                 let filepath = data.upload_dir.join(format!("{}_{}", file_id, filename));
                 std::fs::write(&filepath, &bytes)
                     .map_err(|e| actix_web::error::ErrorInternalServerError(e))?;
@@ -349,10 +356,10 @@ async fn update_metadata(
 async fn download_file(
     path: web::Path<String>,
     data: web::Data<AppState>,
-) -> Result<actix_web::fs::NamedFile> {
+) -> Result<actix_files::NamedFile> {
     let filename = path.into_inner();
     let filepath = data.output_dir.join(&filename);
-    Ok(actix_web::fs::NamedFile::open(filepath)?)
+    Ok(actix_files::NamedFile::open(filepath)?)
 }
 
 #[actix_web::main]
