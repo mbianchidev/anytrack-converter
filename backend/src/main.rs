@@ -51,6 +51,12 @@ async fn convert_audio(
     let mut quality = None;
     let mut file_path: Option<PathBuf> = None;
     let file_id = Uuid::new_v4().to_string();
+    let mut bitrate_mode = String::from("constant");
+    let mut sample_rate = String::from("44100");
+    let mut channels = String::from("2");
+    let mut fade_in = false;
+    let mut fade_out = false;
+    let mut reverse = false;
 
     // Process multipart form data
     while let Ok(Some(mut field)) = payload.try_next().await {
@@ -99,6 +105,48 @@ async fn convert_audio(
                 }
                 quality = Some(String::from_utf8(bytes).unwrap_or_else(|_| String::from("192")));
             }
+            "bitrate_mode" => {
+                let mut bytes = Vec::new();
+                while let Ok(Some(chunk)) = field.try_next().await {
+                    bytes.extend_from_slice(&chunk);
+                }
+                bitrate_mode = String::from_utf8(bytes).unwrap_or_else(|_| String::from("constant"));
+            }
+            "sample_rate" => {
+                let mut bytes = Vec::new();
+                while let Ok(Some(chunk)) = field.try_next().await {
+                    bytes.extend_from_slice(&chunk);
+                }
+                sample_rate = String::from_utf8(bytes).unwrap_or_else(|_| String::from("44100"));
+            }
+            "channels" => {
+                let mut bytes = Vec::new();
+                while let Ok(Some(chunk)) = field.try_next().await {
+                    bytes.extend_from_slice(&chunk);
+                }
+                channels = String::from_utf8(bytes).unwrap_or_else(|_| String::from("2"));
+            }
+            "fade_in" => {
+                let mut bytes = Vec::new();
+                while let Ok(Some(chunk)) = field.try_next().await {
+                    bytes.extend_from_slice(&chunk);
+                }
+                fade_in = String::from_utf8(bytes).unwrap_or_else(|_| String::from("false")) == "true";
+            }
+            "fade_out" => {
+                let mut bytes = Vec::new();
+                while let Ok(Some(chunk)) = field.try_next().await {
+                    bytes.extend_from_slice(&chunk);
+                }
+                fade_out = String::from_utf8(bytes).unwrap_or_else(|_| String::from("false")) == "true";
+            }
+            "reverse" => {
+                let mut bytes = Vec::new();
+                while let Ok(Some(chunk)) = field.try_next().await {
+                    bytes.extend_from_slice(&chunk);
+                }
+                reverse = String::from_utf8(bytes).unwrap_or_else(|_| String::from("false")) == "true";
+            }
             _ => {}
         }
     }
@@ -109,15 +157,59 @@ async fn convert_audio(
 
         // Build ffmpeg command
         let mut cmd = Command::new("ffmpeg");
-        cmd.arg("-i")
-            .arg(&input_path)
-            .arg("-y");
+        cmd.arg("-i").arg(&input_path).arg("-y");
 
-        // Add quality settings based on format
+        // Build audio filter chain
+        let mut filters = Vec::new();
+        
+        // Apply reverse if requested
+        if reverse {
+            filters.push("areverse".to_string());
+        }
+        
+        // Apply fade in (3 seconds)
+        if fade_in {
+            filters.push("afade=t=in:ss=0:d=3".to_string());
+        }
+        
+        // Apply fade out (3 seconds from end)
+        if fade_out {
+            filters.push("afade=t=out:st=-3:d=3".to_string());
+        }
+
+        // Apply filters if any exist
+        if !filters.is_empty() {
+            cmd.arg("-af").arg(filters.join(","));
+        }
+
+        // Set sample rate
+        cmd.arg("-ar").arg(&sample_rate);
+
+        // Set channels
+        cmd.arg("-ac").arg(&channels);
+
+        // Add quality settings based on format and bitrate mode
         if let Some(q) = quality {
             match format.as_str() {
                 "mp3" => {
-                    cmd.arg("-b:a").arg(format!("{}k", q));
+                    if bitrate_mode == "variable" {
+                        // Use VBR quality scale (0-9, where 0 is best)
+                        let vbr_quality = match q.parse::<i32>().unwrap_or(192) {
+                            x if x >= 320 => 0,
+                            x if x >= 256 => 1,
+                            x if x >= 224 => 2,
+                            x if x >= 192 => 3,
+                            x if x >= 160 => 4,
+                            x if x >= 128 => 5,
+                            x if x >= 96 => 6,
+                            x if x >= 80 => 7,
+                            x if x >= 64 => 8,
+                            _ => 9,
+                        };
+                        cmd.arg("-q:a").arg(format!("{}", vbr_quality));
+                    } else {
+                        cmd.arg("-b:a").arg(format!("{}k", q));
+                    }
                 }
                 "ogg" | "opus" => {
                     cmd.arg("-b:a").arg(format!("{}k", q));

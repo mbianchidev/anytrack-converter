@@ -18,6 +18,15 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [downloadUrl, setDownloadUrl] = useState('');
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [advancedSettings, setAdvancedSettings] = useState({
+    bitrateMode: 'constant',
+    sampleRate: '44100',
+    channels: '2',
+    fadeIn: false,
+    fadeOut: false,
+    reverse: false
+  });
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -39,6 +48,12 @@ function App() {
     formData.append('file', file);
     formData.append('format', format);
     formData.append('quality', quality);
+    formData.append('bitrate_mode', advancedSettings.bitrateMode);
+    formData.append('sample_rate', advancedSettings.sampleRate);
+    formData.append('channels', advancedSettings.channels);
+    formData.append('fade_in', advancedSettings.fadeIn.toString());
+    formData.append('fade_out', advancedSettings.fadeOut.toString());
+    formData.append('reverse', advancedSettings.reverse.toString());
 
     try {
       const response = await fetch(`${API_URL}/api/convert`, {
@@ -207,6 +222,113 @@ function App() {
                   onChange={(e) => setQuality(e.target.value)}
                   disabled={loading}
                 />
+              </div>
+            )}
+
+            <button
+              className="btn-advanced"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              type="button"
+              disabled={loading}
+            >
+              {showAdvanced ? '▼' : '▶'} Advanced settings
+            </button>
+
+            {showAdvanced && (
+              <div className="advanced-settings">
+                <div className="form-group">
+                  <label>Bitrate Mode:</label>
+                  <div className="radio-group">
+                    <label>
+                      <input
+                        type="radio"
+                        name="bitrateMode"
+                        value="constant"
+                        checked={advancedSettings.bitrateMode === 'constant'}
+                        onChange={(e) => setAdvancedSettings({...advancedSettings, bitrateMode: e.target.value})}
+                        disabled={loading}
+                      />
+                      Constant
+                    </label>
+                    <label>
+                      <input
+                        type="radio"
+                        name="bitrateMode"
+                        value="variable"
+                        checked={advancedSettings.bitrateMode === 'variable'}
+                        onChange={(e) => setAdvancedSettings({...advancedSettings, bitrateMode: e.target.value})}
+                        disabled={loading}
+                      />
+                      Variable
+                    </label>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Sample Rate:</label>
+                  <select
+                    value={advancedSettings.sampleRate}
+                    onChange={(e) => setAdvancedSettings({...advancedSettings, sampleRate: e.target.value})}
+                    disabled={loading}
+                  >
+                    <option value="8000">8000 Hz</option>
+                    <option value="11025">11025 Hz</option>
+                    <option value="16000">16000 Hz</option>
+                    <option value="22050">22050 Hz</option>
+                    <option value="32000">32000 Hz</option>
+                    <option value="44100">44100 Hz</option>
+                    <option value="48000">48000 Hz</option>
+                    <option value="96000">96000 Hz</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Channels:</label>
+                  <select
+                    value={advancedSettings.channels}
+                    onChange={(e) => setAdvancedSettings({...advancedSettings, channels: e.target.value})}
+                    disabled={loading}
+                  >
+                    <option value="1">Mono (1)</option>
+                    <option value="2">Stereo (2)</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={advancedSettings.fadeIn}
+                      onChange={(e) => setAdvancedSettings({...advancedSettings, fadeIn: e.target.checked})}
+                      disabled={loading}
+                    />
+                    Fade in
+                  </label>
+                </div>
+
+                <div className="form-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={advancedSettings.fadeOut}
+                      onChange={(e) => setAdvancedSettings({...advancedSettings, fadeOut: e.target.checked})}
+                      disabled={loading}
+                    />
+                    Fade out
+                  </label>
+                </div>
+
+                <div className="form-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={advancedSettings.reverse}
+                      onChange={(e) => setAdvancedSettings({...advancedSettings, reverse: e.target.checked})}
+                      disabled={loading}
+                    />
+                    Reverse
+                  </label>
+                </div>
               </div>
             )}
 
