@@ -1,0 +1,15 @@
+[package]
+name = "anytrack-converter"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+actix-web = "4.9"
+actix-multipart = "0.7"
+actix-cors = "0.7"
+tokio = { version = "1.42", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "1.11", features = ["v4", "serde"] }
+tempfile = "3.14"
+futures-util = "0.3"
