@@ -29,6 +29,7 @@ struct ApiResponse {
     success: bool,
     message: String,
     file_id: Option<String>,
+    original_name: Option<String>,
 }
 
 struct AppState {
@@ -57,6 +58,7 @@ async fn convert_audio(
     let mut fade_in = false;
     let mut fade_out = false;
     let mut reverse = false;
+    let mut original_filename = String::new();
 
     // Process multipart form data
     while let Ok(Some(mut field)) = payload.try_next().await {
@@ -73,6 +75,7 @@ async fn convert_audio(
         match field_name.as_str() {
             "file" => {
                 let filename = filename_opt.unwrap_or_else(|| "upload".to_string());
+                original_filename = filename.clone();
                 let filepath = data.upload_dir.join(format!("{}_{}", file_id, &filename));
 
                 let mut f = web::block(move || std::fs::File::create(filepath.clone()))
@@ -236,6 +239,7 @@ async fn convert_audio(
                     String::from_utf8_lossy(&output.stderr)
                 ),
                 file_id: None,
+                original_name: None,
             }));
         }
 
@@ -244,16 +248,25 @@ async fn convert_audio(
             eprintln!("Warning: Failed to clean up input file: {}", e);
         }
 
+        // Extract base name without extension for the download filename
+        let base_name = std::path::Path::new(&original_filename)
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("converted")
+            .to_string();
+
         Ok(HttpResponse::Ok().json(ApiResponse {
             success: true,
             message: "Conversion successful".to_string(),
             file_id: Some(output_filename),
+            original_name: Some(base_name),
         }))
     } else {
         Ok(HttpResponse::BadRequest().json(ApiResponse {
             success: false,
             message: "No file uploaded".to_string(),
             file_id: None,
+            original_name: None,
         }))
     }
 }
@@ -266,6 +279,21 @@ async fn convert_youtube(
     let temp_video = data.upload_dir.join(format!("{}.mp4", file_id));
     let output_filename = format!("{}.{}", file_id, req.format);
     let output_path = data.output_dir.join(&output_filename);
+
+    // Get video title first using yt-dlp
+    let title_output = Command::new("yt-dlp")
+        .arg("--get-title")
+        .arg(&req.url)
+        .output()
+        .map_err(|e| {
+            actix_web::error::ErrorInternalServerError(format!("yt-dlp error: {}", e))
+        })?;
+
+    let video_title = if title_output.status.success() {
+        String::from_utf8_lossy(&title_output.stdout).trim().to_string()
+    } else {
+        "youtube-audio".to_string()
+    };
 
     // Download video using yt-dlp
     let yt_output = Command::new("yt-dlp")
@@ -287,6 +315,7 @@ async fn convert_youtube(
                 String::from_utf8_lossy(&yt_output.stderr)
             ),
             file_id: None,
+            original_name: None,
         }));
     }
 
@@ -322,6 +351,7 @@ async fn convert_youtube(
                 String::from_utf8_lossy(&ffmpeg_output.stderr)
             ),
             file_id: None,
+            original_name: None,
         }));
     }
 
@@ -329,6 +359,7 @@ async fn convert_youtube(
         success: true,
         message: "YouTube conversion successful".to_string(),
         file_id: Some(output_filename),
+        original_name: Some(video_title),
     }))
 }
 
@@ -429,19 +460,32 @@ async fn update_metadata(
                     String::from_utf8_lossy(&output.stderr)
                 ),
                 file_id: None,
+                original_name: None,
             }));
         }
+
+        // Extract base name without extension
+        let base_name = input_path
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("metadata")
+            .to_string();
+        // Remove the UUID prefix if present
+        let clean_name = base_name.split('_').skip(1).collect::<Vec<_>>().join("_");
+        let final_name = if clean_name.is_empty() { base_name } else { clean_name };
 
         Ok(HttpResponse::Ok().json(ApiResponse {
             success: true,
             message: "Metadata updated successfully".to_string(),
             file_id: Some(output_filename),
+            original_name: Some(final_name),
         }))
     } else {
         Ok(HttpResponse::BadRequest().json(ApiResponse {
             success: false,
             message: "No file uploaded".to_string(),
             file_id: None,
+            original_name: None,
         }))
     }
 }

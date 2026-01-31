@@ -22,9 +22,16 @@
 body {
   margin: 0;
   display: flex;
-  place-items: center;
+  justify-content: center;
+  align-items: center;
   min-width: 320px;
   min-height: 100vh;
+}
+
+#root {
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .app {
@@ -85,12 +92,16 @@ header p {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 12px;
   padding: 2rem;
-  min-height: 400px;
+  min-height: 550px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .section {
   display: flex;
   flex-direction: column;
+  width: 100%;
   gap: 1.5rem;
   align-items: center;
 }
@@ -190,6 +201,40 @@ header p {
   cursor: not-allowed;
 }
 
+.progress-container {
+  width: 100%;
+  max-width: 500px;
+  margin: 1.5rem auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #667eea;
+  min-width: 45px;
+  text-align: right;
+}
+
 .message {
   padding: 1rem;
   border-radius: 8px;
@@ -211,6 +256,31 @@ header p {
 
 .download-section {
   margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.download-section h3 {
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+}
+
+.audio-preview {
+  width: 100%;
+  max-width: 500px;
+  border-radius: 8px;
+}
+
+.filename-preview {
+  font-size: 0.9rem;
+  color: #888;
+  word-break: break-all;
+}
+
+.filename-preview strong {
+  color: #4ade80;
 }
 
 .btn-download {
@@ -219,9 +289,11 @@ header p {
   background: #22c55e;
   color: white;
   text-decoration: none;
+  border: none;
   border-radius: 8px;
   font-size: 1.1rem;
   font-weight: 600;
+  cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -260,44 +332,95 @@ header p {
   width: 100%;
   max-width: 500px;
   margin-top: 1rem;
-  padding: 1.5rem;
+  padding: 1.5rem 2rem;
   background: rgba(255, 255, 255, 0.03);
   border: 2px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  border-radius: 12px;
+}
+
+.advanced-settings .form-group {
+  margin-bottom: 1.25rem;
+}
+
+.advanced-settings .form-group:last-child {
+  margin-bottom: 0;
 }
 
 .radio-group {
   display: flex;
-  gap: 1.5rem;
-  margin-top: 0.5rem;
+  gap: 2rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem 0;
 }
 
 .radio-group label {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   cursor: pointer;
+  font-size: 1rem;
 }
 
 .radio-group input[type="radio"] {
-  width: auto;
+  width: 18px;
+  height: 18px;
   margin: 0;
   cursor: pointer;
+  accent-color: #646cff;
 }
 
 .checkbox-label {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
   cursor: pointer;
   margin: 0;
+  padding: 0.25rem 0;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  list-style: none;
+}
+
+.checkbox-label:hover {
+  opacity: 0.85;
 }
 
 .checkbox-label input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
   width: 20px;
   height: 20px;
+  min-width: 20px;
+  margin: 0;
+  margin-right: 0.5rem;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+  background: transparent;
   cursor: pointer;
-  accent-color: #646cff;
+  flex-shrink: 0;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.checkbox-label input[type="checkbox"]:hover {
+  border-color: #646cff;
+}
+
+.checkbox-label input[type="checkbox"]:checked {
+  background: #646cff;
+  border-color: #646cff;
+}
+
+.checkbox-label input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 1px;
+  width: 6px;
+  height: 11px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }
 
 footer {

@@ -16,9 +16,29 @@ function App() {
     genre: ''
   });
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState('');
   const [downloadUrl, setDownloadUrl] = useState('');
+  const [originalName, setOriginalName] = useState('');
+  const [previewUrl, setPreviewUrl] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // Clear all results/preview state
+  const clearResults = () => {
+    setMessage('');
+    setDownloadUrl('');
+    setOriginalName('');
+    setPreviewUrl('');
+    setProgress(0);
+  };
+
+  // Handle tab change - clear preview state
+  const handleTabChange = (tab) => {
+    if (tab !== activeTab) {
+      clearResults();
+      setActiveTab(tab);
+    }
+  };
   const [advancedSettings, setAdvancedSettings] = useState({
     bitrateMode: 'constant',
     sampleRate: '44100',
@@ -30,8 +50,7 @@ function App() {
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
-    setMessage('');
-    setDownloadUrl('');
+    clearResults();
   };
 
   const handleConvert = async () => {
@@ -41,8 +60,8 @@ function App() {
     }
 
     setLoading(true);
-    setMessage('');
-    setDownloadUrl('');
+    clearResults();
+    setProgress(10);
 
     const formData = new FormData();
     formData.append('file', file);
@@ -55,21 +74,36 @@ function App() {
     formData.append('fade_out', advancedSettings.fadeOut.toString());
     formData.append('reverse', advancedSettings.reverse.toString());
 
+    // Simulate progress during upload/conversion
+    const progressInterval = setInterval(() => {
+      setProgress(prev => prev < 85 ? prev + Math.random() * 15 : prev);
+    }, 500);
+
     try {
       const response = await fetch(`${API_URL}/api/convert`, {
         method: 'POST',
         body: formData,
       });
 
+      clearInterval(progressInterval);
+      setProgress(95);
+
       const data = await response.json();
 
       if (data.success) {
+        setProgress(100);
         setMessage('✅ Conversion successful!');
-        setDownloadUrl(`${API_URL}/api/download/${data.file_id}`);
+        const url = `${API_URL}/api/download/${data.file_id}`;
+        setDownloadUrl(url);
+        setPreviewUrl(url);
+        setOriginalName(data.original_name || 'converted');
       } else {
+        setProgress(0);
         setMessage(`❌ Error: ${data.message}`);
       }
     } catch (error) {
+      clearInterval(progressInterval);
+      setProgress(0);
       setMessage(`❌ Error: ${error.message}`);
     } finally {
       setLoading(false);
@@ -83,8 +117,13 @@ function App() {
     }
 
     setLoading(true);
-    setMessage('');
-    setDownloadUrl('');
+    clearResults();
+    setProgress(5);
+
+    // Simulate progress during download/conversion (YouTube takes longer)
+    const progressInterval = setInterval(() => {
+      setProgress(prev => prev < 80 ? prev + Math.random() * 8 : prev);
+    }, 800);
 
     try {
       const response = await fetch(`${API_URL}/api/youtube`, {
@@ -99,15 +138,25 @@ function App() {
         }),
       });
 
+      clearInterval(progressInterval);
+      setProgress(95);
+
       const data = await response.json();
 
       if (data.success) {
+        setProgress(100);
         setMessage('✅ YouTube conversion successful!');
-        setDownloadUrl(`${API_URL}/api/download/${data.file_id}`);
+        const url = `${API_URL}/api/download/${data.file_id}`;
+        setDownloadUrl(url);
+        setPreviewUrl(url);
+        setOriginalName(data.original_name || 'youtube-audio');
       } else {
+        setProgress(0);
         setMessage(`❌ Error: ${data.message}`);
       }
     } catch (error) {
+      clearInterval(progressInterval);
+      setProgress(0);
       setMessage(`❌ Error: ${error.message}`);
     } finally {
       setLoading(false);
@@ -121,8 +170,8 @@ function App() {
     }
 
     setLoading(true);
-    setMessage('');
-    setDownloadUrl('');
+    clearResults();
+    setProgress(10);
 
     const formData = new FormData();
     formData.append('file', file);
@@ -131,24 +180,78 @@ function App() {
     if (metadata.album) formData.append('album', metadata.album);
     if (metadata.genre) formData.append('genre', metadata.genre);
 
+    // Simulate progress
+    const progressInterval = setInterval(() => {
+      setProgress(prev => prev < 85 ? prev + Math.random() * 20 : prev);
+    }, 400);
+
     try {
       const response = await fetch(`${API_URL}/api/metadata`, {
         method: 'POST',
         body: formData,
       });
 
+      clearInterval(progressInterval);
+      setProgress(95);
+
       const data = await response.json();
 
       if (data.success) {
+        setProgress(100);
         setMessage('✅ Metadata updated successfully!');
-        setDownloadUrl(`${API_URL}/api/download/${data.file_id}`);
+        const url = `${API_URL}/api/download/${data.file_id}`;
+        setDownloadUrl(url);
+        setPreviewUrl(url);
+        setOriginalName(data.original_name || 'metadata');
       } else {
+        setProgress(0);
         setMessage(`❌ Error: ${data.message}`);
       }
     } catch (error) {
+      clearInterval(progressInterval);
+      setProgress(0);
       setMessage(`❌ Error: ${error.message}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Normalize filename: replace spaces with dashes, remove special chars
+  const normalizeFilename = (name) => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+  };
+
+  const handleDownload = async () => {
+    if (!downloadUrl) return;
+
+    try {
+      const response = await fetch(downloadUrl);
+      const blob = await response.blob();
+      
+      // Get file extension from the download URL
+      const urlParts = downloadUrl.split('.');
+      const extension = urlParts[urlParts.length - 1];
+      
+      // Create normalized filename with _anytrack suffix
+      const normalizedName = normalizeFilename(originalName);
+      const filename = `${normalizedName}_anytrack.${extension}`;
+      
+      // Create download link and trigger it
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      setMessage(`❌ Download error: ${error.message}`);
     }
   };
 
@@ -162,19 +265,19 @@ function App() {
       <div className="tabs">
         <button
           className={activeTab === 'convert' ? 'active' : ''}
-          onClick={() => setActiveTab('convert')}
+          onClick={() => handleTabChange('convert')}
         >
           Convert Audio
         </button>
         <button
           className={activeTab === 'youtube' ? 'active' : ''}
-          onClick={() => setActiveTab('youtube')}
+          onClick={() => handleTabChange('youtube')}
         >
           YouTube to Audio
         </button>
         <button
           className={activeTab === 'metadata' ? 'active' : ''}
-          onClick={() => setActiveTab('metadata')}
+          onClick={() => handleTabChange('metadata')}
         >
           Edit Metadata
         </button>
@@ -302,7 +405,7 @@ function App() {
                       onChange={(e) => setAdvancedSettings({...advancedSettings, fadeIn: e.target.checked})}
                       disabled={loading}
                     />
-                    Fade in
+                    <span>Fade in</span>
                   </label>
                 </div>
 
@@ -314,7 +417,7 @@ function App() {
                       onChange={(e) => setAdvancedSettings({...advancedSettings, fadeOut: e.target.checked})}
                       disabled={loading}
                     />
-                    Fade out
+                    <span>Fade out</span>
                   </label>
                 </div>
 
@@ -326,7 +429,7 @@ function App() {
                       onChange={(e) => setAdvancedSettings({...advancedSettings, reverse: e.target.checked})}
                       disabled={loading}
                     />
-                    Reverse
+                    <span>Reverse</span>
                   </label>
                 </div>
               </div>
@@ -472,6 +575,18 @@ function App() {
           </div>
         )}
 
+        {loading && (
+          <div className="progress-container">
+            <div className="progress-bar">
+              <div 
+                className="progress-fill" 
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <span className="progress-text">{Math.round(progress)}%</span>
+          </div>
+        )}
+
         {message && (
           <div className={`message ${message.includes('✅') ? 'success' : 'error'}`}>
             {message}
@@ -480,9 +595,16 @@ function App() {
 
         {downloadUrl && (
           <div className="download-section">
-            <a href={downloadUrl} download className="btn-download">
+            <h3>🎧 Preview</h3>
+            <audio controls src={previewUrl} className="audio-preview">
+              Your browser does not support the audio element.
+            </audio>
+            <p className="filename-preview">
+              Filename: <strong>{normalizeFilename(originalName)}_anytrack.{downloadUrl.split('.').pop()}</strong>
+            </p>
+            <button onClick={handleDownload} className="btn-download">
               📥 Download File
-            </a>
+            </button>
           </div>
         )}
       </div>
