@@ -1,0 +1,18 @@
+# CODEOWNERS - defines who owns which parts of the codebase
+# These owners will be automatically requested for review when PRs touch their files
+
+# Default owner for all files
+* @mbianchidev
+
+# Backend (Rust)
+/backend/ @mbianchidev
+
+# Frontend (React)
+/frontend/ @mbianchidev
+
+# Infrastructure and deployment
+/docker-compose.yml @mbianchidev
+/.github/ @mbianchidev
+
+# Documentation
+/*.md @mbianchidev
