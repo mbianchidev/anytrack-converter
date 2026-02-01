@@ -230,7 +230,7 @@ anytrack-converter/
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## Security
 
@@ -267,19 +267,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Support
 
 If you encounter any issues or have questions, please open an issue on GitHub.
-
-## Troubleshooting
-
-### Docker Issues
-- **Port already in use**: Change ports in `docker-compose.yml`
-- **Build fails**: Ensure you have enough disk space and Docker is up to date
-- **Large header/cookie errors**: Nginx buffer size is configured in `frontend/nginx.conf`
-
-### Manual Setup Issues
-- **FFmpeg not found**: Make sure FFmpeg is installed and in your PATH
-- **yt-dlp not found**: Install with `pip3 install yt-dlp`
-- **Backend won't start**: Check if port 8080 is available
-- **Frontend won't start**: Check if port 3000 is available
 
 ---
 

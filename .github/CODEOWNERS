@@ -1,0 +1,12 @@
+# Default owners
+* @mbianchidev
+
+# Backend
+/backend/ @mbianchidev
+
+# Frontend
+/frontend/ @mbianchidev
+
+# Infrastructure and docs
+/.github/ @mbianchidev
+/*.md @mbianchidev

@@ -1,142 +1,76 @@
-# AGENTS.md - Development Guidelines for AnyTrack Converter
+# AGENTS.md
 
-## Project Overview
+## Stack & Technologies
 
-AnyTrack Converter is a web application for converting audio files and extracting audio from YouTube videos. It consists of a Rust backend and a React frontend, both containerized with Docker.
+- Backend: Rust, Actix-web, actix-multipart, FFmpeg, yt-dlp
+- Frontend: React (Vite), CSS
+- Deployment: Docker, Docker Compose, Nginx (prod static serving)
 
-## Project Structure
+## Architecture Overview
+
+- Rust API server handles uploads, conversion, and downloads.
+- React SPA calls the API and manages UI state.
+- Temporary files are stored in backend uploads/outputs (gitignored).
+
+## Project Scope
+
+In scope:
+- Audio conversion and metadata updates.
+- YouTube URL audio extraction.
+- Single-user, local or self-hosted deployment.
+
+Out of scope:
+- User accounts, multi-tenant access, or cloud storage.
+- Distributed job queues or long-running background workers.
+
+## API Documentation
+
+- `GET /health` -> `{ status, version }`
+- `POST /api/convert` (multipart) -> `file`, `format`, `quality`, advanced options
+- `POST /api/youtube` (json) -> `{ url, format, quality }`
+- `POST /api/metadata` (multipart) -> `file`, optional metadata fields
+- `GET /api/download/{file_id}` -> binary file
+
+All responses use the `ApiResponse` shape with `success`, `message`, and optional `file_id`/`original_name`.
+
+## Directory Structure
 
 ```
 anytrack-converter/
-├── backend/                 # Rust backend (Actix-web)
-│   ├── src/
-│   │   └── main.rs         # Main application entry point, all API routes
-│   ├── Cargo.toml          # Rust dependencies
-│   ├── Dockerfile          # Backend container configuration
-│   ├── uploads/            # Temporary upload storage (gitignored)
-│   └── outputs/            # Converted file storage (gitignored)
-├── frontend/                # React frontend (Vite)
-│   ├── src/
-│   │   ├── App.jsx         # Main React component with all UI logic
-│   │   ├── App.css         # All application styles
-│   │   ├── main.jsx        # React entry point
-│   │   └── index.css       # Base/global styles
-│   ├── nginx.conf          # Nginx configuration for production
-│   ├── package.json        # Node.js dependencies
-│   └── Dockerfile          # Frontend container configuration
-├── docker-compose.yml       # Container orchestration
-├── README.md               # User documentation
-├── QUICKSTART.md           # Quick setup guide
-└── LICENSE                 # MIT License
+├── backend/                 # Rust API (Actix-web)
+│   └── src/main.rs           # Single entry point + routes
+├── frontend/                 # React app (Vite)
+│   ├── src/App.jsx           # UI + client logic
+│   └── src/App.css           # Styling
+├── docker-compose.yml        # Local orchestration
+├── README.md                 # Project overview
+├── LICENSE                   # MIT License
+└── .github/                  # Community files
 ```
 
-## Tech Stack
+## Design Principles
 
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| Backend | Rust + Actix-web | High-performance API server |
-| Frontend | React + Vite | Modern SPA with fast HMR |
-| Audio Processing | FFmpeg | Audio conversion, metadata editing |
-| Video Download | yt-dlp | YouTube audio extraction |
-| Container Runtime | Docker + Docker Compose | Consistent deployment |
-| Frontend Server | Nginx | Static file serving, SPA routing |
+- Keep UX simple and fast; avoid unnecessary steps.
+- Prefer clarity over cleverness; readable code first.
+- Fail safely; report errors to users with clear messages.
+- Clean up temporary files to prevent disk bloat.
 
-## Architecture
+## Backend Rules
 
-### Backend (Port 8080)
+- Validate inputs (formats, URLs) before running FFmpeg/yt-dlp.
+- Use `ApiResponse` for all JSON responses.
+- Do not block the Actix runtime with long sync work; use `web::block` where needed.
+- Always delete temporary files after conversion completes or fails.
 
-Single-file Rust application (`main.rs`) with the following API endpoints:
+## Frontend Guidelines
 
-- `GET /health` - Health check
-- `POST /api/convert` - Convert audio files (multipart form)
-- `POST /api/youtube` - Extract audio from YouTube URL (JSON)
-- `POST /api/metadata` - Update audio file metadata (multipart form)
-- `GET /api/download/{file_id}` - Download converted files
+- Accessibility: label all inputs and ensure visible focus states.
+- Performance: avoid unnecessary re-renders; keep large lists virtualized if added.
+- Loading speed: show progress and disable actions while requests are in flight.
+- Errors: display user-friendly error messages; keep `console.error` for unexpected failures.
 
-The backend uses:
-- UUID-based file IDs for unique file naming
-- Subprocess calls to FFmpeg and yt-dlp
-- Automatic cleanup of input files after processing
+## Coding Style
 
-### Frontend (Port 3000)
-
-Single-page React application with three main features (tabs):
-1. **Convert Audio** - Upload and convert audio files with format/quality options
-2. **YouTube to Audio** - Extract audio from YouTube videos
-3. **Edit Metadata** - Update artist, title, album, genre tags
-
-State management is handled via React hooks (useState).
-
-## Development Guidelines
-
-### Running Locally
-
-```bash
-# Start both services
-docker compose up --build
-
-# Rebuild without cache (after dependency changes)
-docker compose build --no-cache && docker compose up -d
-
-# View logs
-docker compose logs -f
-```
-
-### Making Changes
-
-#### Backend Changes
-1. Edit `backend/src/main.rs`
-2. Rebuild: `docker compose build --no-cache backend && docker compose up -d backend`
-3. Test API at http://localhost:8080
-
-#### Frontend Changes
-1. Edit files in `frontend/src/`
-2. Rebuild: `docker compose build --no-cache frontend && docker compose up -d frontend`
-3. View at http://localhost:3000
-
-### Code Style
-
-**Rust (Backend)**
-- Single `main.rs` file - keep it modular with clear function separation
-- Use `ApiResponse` struct for consistent JSON responses
-- Clean up temporary files after processing
-- Log errors to stderr with `eprintln!`
-
-**React (Frontend)**
-- Single `App.jsx` component - use helper functions for logic
-- Single `App.css` file - use CSS classes, avoid inline styles
-- Reset UI state when switching tabs
-- Use async/await for API calls with try/catch error handling
-
-### Adding New Features
-
-1. **New conversion format**: Add option to format select dropdowns in `App.jsx`, update FFmpeg command in `main.rs`
-2. **New API endpoint**: Add route in `main.rs`, create corresponding handler function
-3. **New UI component**: Add to `App.jsx`, style in `App.css`
-
-### Testing
-
-- Backend: Test API endpoints directly with curl or Postman
-- Frontend: Manual browser testing at localhost:3000
-- Full stack: Use docker-compose for integration testing
-
-## Environment Variables
-
-| Variable | Service | Default | Description |
-|----------|---------|---------|-------------|
-| `RUST_LOG` | backend | info | Rust logging level |
-| `VITE_API_URL` | frontend | http://localhost:8080 | Backend API URL |
-
-## Common Issues
-
-1. **Large header/cookie errors**: Nginx buffer size configured in `nginx.conf`
-2. **CORS errors**: Backend allows all origins (adjust for production)
-3. **yt-dlp failures**: Ensure yt-dlp is updated in the backend container
-
-## Future Improvements
-
-- [ ] Add batch conversion support
-- [ ] Implement user authentication
-- [ ] Add audio waveform visualization
-- [ ] Support more video platforms
-- [ ] Add conversion queue with WebSocket status updates
+- Rust: `rustfmt` for formatting, `clippy` for linting.
+- JS/React: ESLint config in `frontend/eslint.config.js`.
+- Prefer small helper functions in `App.jsx` over inline logic blocks.
