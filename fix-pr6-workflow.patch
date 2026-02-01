@@ -1,0 +1,187 @@
+commit 9fb8bdc9e9c9c03606414e1968cd3d01116ae3ca
+Author: copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>
+Date:   Sun Feb 1 15:55:53 2026 +0000
+
+    Fix Rust formatting issues in backend/src/main.rs
+
+diff --git a/backend/src/main.rs b/backend/src/main.rs
+index 722e352..619beb3 100644
+--- a/backend/src/main.rs
++++ b/backend/src/main.rs
+@@ -44,10 +44,7 @@ async fn health_check() -> HttpResponse {
+     }))
+ }
+ 
+-async fn convert_audio(
+-    mut payload: Multipart,
+-    data: web::Data<AppState>,
+-) -> Result<HttpResponse> {
++async fn convert_audio(mut payload: Multipart, data: web::Data<AppState>) -> Result<HttpResponse> {
+     let mut format = String::from("mp3");
+     let mut quality = None;
+     let mut file_path: Option<PathBuf> = None;
+@@ -80,7 +77,7 @@ async fn convert_audio(
+ 
+                 let mut f = web::block(move || std::fs::File::create(filepath.clone()))
+                     .await?
+-                    .map_err(|e| actix_web::error::ErrorInternalServerError(e))?;
++                    .map_err(actix_web::error::ErrorInternalServerError)?;
+ 
+                 while let Ok(Some(chunk)) = field.try_next().await {
+                     f = web::block(move || {
+@@ -89,7 +86,7 @@ async fn convert_audio(
+                         Ok::<_, std::io::Error>(file)
+                     })
+                     .await?
+-                    .map_err(|e| actix_web::error::ErrorInternalServerError(e))?;
++                    .map_err(actix_web::error::ErrorInternalServerError)?;
+                 }
+ 
+                 file_path = Some(data.upload_dir.join(format!("{}_{}", file_id, filename)));
+@@ -113,7 +110,8 @@ async fn convert_audio(
+                 while let Ok(Some(chunk)) = field.try_next().await {
+                     bytes.extend_from_slice(&chunk);
+                 }
+-                bitrate_mode = String::from_utf8(bytes).unwrap_or_else(|_| String::from("constant"));
++                bitrate_mode =
++                    String::from_utf8(bytes).unwrap_or_else(|_| String::from("constant"));
+             }
+             "sample_rate" => {
+                 let mut bytes = Vec::new();
+@@ -134,21 +132,24 @@ async fn convert_audio(
+                 while let Ok(Some(chunk)) = field.try_next().await {
+                     bytes.extend_from_slice(&chunk);
+                 }
+-                fade_in = String::from_utf8(bytes).unwrap_or_else(|_| String::from("false")) == "true";
++                fade_in =
++                    String::from_utf8(bytes).unwrap_or_else(|_| String::from("false")) == "true";
+             }
+             "fade_out" => {
+                 let mut bytes = Vec::new();
+                 while let Ok(Some(chunk)) = field.try_next().await {
+                     bytes.extend_from_slice(&chunk);
+                 }
+-                fade_out = String::from_utf8(bytes).unwrap_or_else(|_| String::from("false")) == "true";
++                fade_out =
++                    String::from_utf8(bytes).unwrap_or_else(|_| String::from("false")) == "true";
+             }
+             "reverse" => {
+                 let mut bytes = Vec::new();
+                 while let Ok(Some(chunk)) = field.try_next().await {
+                     bytes.extend_from_slice(&chunk);
+                 }
+-                reverse = String::from_utf8(bytes).unwrap_or_else(|_| String::from("false")) == "true";
++                reverse =
++                    String::from_utf8(bytes).unwrap_or_else(|_| String::from("false")) == "true";
+             }
+             _ => {}
+         }
+@@ -164,17 +165,17 @@ async fn convert_audio(
+ 
+         // Build audio filter chain
+         let mut filters = Vec::new();
+-        
++
+         // Apply reverse if requested
+         if reverse {
+             filters.push("areverse".to_string());
+         }
+-        
++
+         // Apply fade in (3 seconds)
+         if fade_in {
+             filters.push("afade=t=in:ss=0:d=3".to_string());
+         }
+-        
++
+         // Apply fade out (3 seconds from end)
+         // FFmpeg will automatically calculate from the end when st is not specified
+         if fade_out {
+@@ -285,12 +286,12 @@ async fn convert_youtube(
+         .arg("--get-title")
+         .arg(&req.url)
+         .output()
+-        .map_err(|e| {
+-            actix_web::error::ErrorInternalServerError(format!("yt-dlp error: {}", e))
+-        })?;
++        .map_err(|e| actix_web::error::ErrorInternalServerError(format!("yt-dlp error: {}", e)))?;
+ 
+     let video_title = if title_output.status.success() {
+-        String::from_utf8_lossy(&title_output.stdout).trim().to_string()
++        String::from_utf8_lossy(&title_output.stdout)
++            .trim()
++            .to_string()
+     } else {
+         "youtube-audio".to_string()
+     };
+@@ -303,9 +304,7 @@ async fn convert_youtube(
+         .arg(&temp_video)
+         .arg(&req.url)
+         .output()
+-        .map_err(|e| {
+-            actix_web::error::ErrorInternalServerError(format!("yt-dlp error: {}", e))
+-        })?;
++        .map_err(|e| actix_web::error::ErrorInternalServerError(format!("yt-dlp error: {}", e)))?;
+ 
+     if !yt_output.status.success() {
+         return Ok(HttpResponse::InternalServerError().json(ApiResponse {
+@@ -321,10 +320,7 @@ async fn convert_youtube(
+ 
+     // Convert to audio using ffmpeg
+     let mut cmd = Command::new("ffmpeg");
+-    cmd.arg("-i")
+-        .arg(&temp_video)
+-        .arg("-y")
+-        .arg("-vn");
++    cmd.arg("-i").arg(&temp_video).arg("-y").arg("-vn");
+ 
+     if let Some(quality) = &req.quality {
+         cmd.arg("-b:a").arg(format!("{}k", quality));
+@@ -334,9 +330,9 @@ async fn convert_youtube(
+ 
+     cmd.arg(&output_path);
+ 
+-    let ffmpeg_output = cmd.output().map_err(|e| {
+-        actix_web::error::ErrorInternalServerError(format!("FFmpeg error: {}", e))
+-    })?;
++    let ffmpeg_output = cmd
++        .output()
++        .map_err(|e| actix_web::error::ErrorInternalServerError(format!("FFmpeg error: {}", e)))?;
+ 
+     // Clean up temp video
+     if let Err(e) = fs::remove_file(&temp_video) {
+@@ -398,7 +394,7 @@ async fn update_metadata(
+                 let filename = filename_opt.unwrap_or_else(|| "upload".to_string());
+                 let filepath = data.upload_dir.join(format!("{}_{}", file_id, filename));
+                 std::fs::write(&filepath, &bytes)
+-                    .map_err(|e| actix_web::error::ErrorInternalServerError(e))?;
++                    .map_err(actix_web::error::ErrorInternalServerError)?;
+                 file_path = Some(filepath);
+             }
+             "artist" => {
+@@ -426,7 +422,11 @@ async fn update_metadata(
+         let output_path = data.output_dir.join(&output_filename);
+ 
+         let mut cmd = Command::new("ffmpeg");
+-        cmd.arg("-i").arg(&input_path).arg("-y").arg("-codec").arg("copy");
++        cmd.arg("-i")
++            .arg(&input_path)
++            .arg("-y")
++            .arg("-codec")
++            .arg("copy");
+ 
+         if let Some(artist) = &metadata.artist {
+             cmd.arg("-metadata").arg(format!("artist={}", artist));
+@@ -472,7 +472,11 @@ async fn update_metadata(
+             .to_string();
+         // Remove the UUID prefix if present
+         let clean_name = base_name.split('_').skip(1).collect::<Vec<_>>().join("_");
+-        let final_name = if clean_name.is_empty() { base_name } else { clean_name };
++        let final_name = if clean_name.is_empty() {
++            base_name
++        } else {
++            clean_name
++        };
+ 
+         Ok(HttpResponse::Ok().json(ApiResponse {
+             success: true,
