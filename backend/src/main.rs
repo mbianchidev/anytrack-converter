@@ -73,7 +73,7 @@ async fn convert_audio(mut payload: Multipart, data: web::Data<AppState>) -> Res
             "file" => {
                 let filename = filename_opt.unwrap_or_else(|| "upload".to_string());
                 original_filename = filename.clone();
-                let filepath = data.upload_dir.join(format!("{}_{}", file_id, &filename));
+                let filepath = data.upload_dir.join(format!("{}_{}", file_id, filename));
 
                 let mut f = web::block(move || std::fs::File::create(filepath.clone()))
                     .await?
