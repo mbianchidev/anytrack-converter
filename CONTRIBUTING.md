@@ -6,7 +6,7 @@ Thanks for your interest in contributing! This guide helps you get set up and su
 
 ### Prerequisites
 
-Use the current [native setup requirements](docs/README.md#native-development-setup) for Rust, Node.js, FFmpeg, and yt-dlp. The [Docker guide](docs/README.md#docker-compose-setup) documents the existing backend runtime limitation; a successful image build alone does not verify startup.
+Use the current [native setup requirements](docs/user-guide.md#native-development-setup) for Rust, Node.js, FFmpeg, and yt-dlp, or follow the [Docker guide](docs/user-guide.md#docker-compose-setup).
 
 ### Setup
 
@@ -15,9 +15,11 @@ git clone https://github.com/mbianchidev/anytrack-converter.git
 cd anytrack-converter
 ```
 
-Follow the [native setup](docs/README.md#native-development-setup) to start the API and frontend in separate terminals, then verify the health endpoint. See the [developer guide](docs/README.md#development-and-project-layout) for architecture and format/lint/test/build commands.
+Follow the [native setup](docs/user-guide.md#native-development-setup) to start the API and frontend in separate terminals, then verify the health endpoint. See the [developer guide](docs/development.md) for architecture, quality checks, accessibility verification, and local container builds.
 
 Coding agents must read [AGENTS.md](AGENTS.md) before editing. All contributors should follow the [AI contribution policy](README.md#ai-policy) and [Code of Conduct](CODE_OF_CONDUCT.md).
+
+Follow [ACCESSIBILITY.md](ACCESSIBILITY.md) when changing the interface or documentation.
 
 ## Development Workflow
 

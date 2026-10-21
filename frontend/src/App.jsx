@@ -257,39 +257,44 @@ function App() {
 
   return (
     <div className="app">
+      <a className="skip-link" href="#main-content">Skip to main content</a>
       <header>
         <h1>🎵 AnyTrack Converter</h1>
         <p>Convert any audio file or YouTube video to any format</p>
       </header>
 
-      <div className="tabs">
+      <div className="tabs" role="group" aria-label="Audio tools">
         <button
           className={activeTab === 'convert' ? 'active' : ''}
+          aria-pressed={activeTab === 'convert'}
           onClick={() => handleTabChange('convert')}
         >
           Convert Audio
         </button>
         <button
           className={activeTab === 'youtube' ? 'active' : ''}
+          aria-pressed={activeTab === 'youtube'}
           onClick={() => handleTabChange('youtube')}
         >
           YouTube to Audio
         </button>
         <button
           className={activeTab === 'metadata' ? 'active' : ''}
+          aria-pressed={activeTab === 'metadata'}
           onClick={() => handleTabChange('metadata')}
         >
           Edit Metadata
         </button>
       </div>
 
-      <div className="content">
+      <main className="content" id="main-content" tabIndex={-1}>
         {activeTab === 'convert' && (
           <div className="section">
             <h2>Convert Audio File</h2>
             <div className="form-group">
-              <label>Select Audio File:</label>
+              <label htmlFor="audio-file">Select Audio File:</label>
               <input
+                id="audio-file"
                 type="file"
                 accept="audio/*"
                 onChange={handleFileChange}
@@ -298,8 +303,9 @@ function App() {
             </div>
 
             <div className="form-group">
-              <label>Output Format:</label>
+              <label htmlFor="output-format">Output Format:</label>
               <select
+                id="output-format"
                 value={format}
                 onChange={(e) => setFormat(e.target.value)}
                 disabled={loading}
@@ -315,8 +321,9 @@ function App() {
 
             {['mp3', 'ogg', 'aac', 'm4a'].includes(format) && (
               <div className="form-group">
-                <label>Bitrate (kbps): {quality}</label>
+                <label htmlFor="output-quality">Bitrate (kbps): {quality}</label>
                 <input
+                  id="output-quality"
                   type="range"
                   min="64"
                   max="320"
@@ -330,6 +337,7 @@ function App() {
 
             <button
               className="btn-advanced"
+              aria-expanded={showAdvanced}
               onClick={() => setShowAdvanced(!showAdvanced)}
               type="button"
               disabled={loading}
@@ -339,8 +347,8 @@ function App() {
 
             {showAdvanced && (
               <div className="advanced-settings">
-                <div className="form-group">
-                  <label>Bitrate Mode:</label>
+                <fieldset className="form-group">
+                  <legend>Bitrate Mode:</legend>
                   <div className="radio-group">
                     <label>
                       <input
@@ -365,11 +373,12 @@ function App() {
                       Variable
                     </label>
                   </div>
-                </div>
+                </fieldset>
 
                 <div className="form-group">
-                  <label>Sample Rate:</label>
+                  <label htmlFor="sample-rate">Sample Rate:</label>
                   <select
+                    id="sample-rate"
                     value={advancedSettings.sampleRate}
                     onChange={(e) => setAdvancedSettings({...advancedSettings, sampleRate: e.target.value})}
                     disabled={loading}
@@ -386,8 +395,9 @@ function App() {
                 </div>
 
                 <div className="form-group">
-                  <label>Channels:</label>
+                  <label htmlFor="audio-channels">Channels:</label>
                   <select
+                    id="audio-channels"
                     value={advancedSettings.channels}
                     onChange={(e) => setAdvancedSettings({...advancedSettings, channels: e.target.value})}
                     disabled={loading}
@@ -449,8 +459,9 @@ function App() {
           <div className="section">
             <h2>Convert YouTube Video to Audio</h2>
             <div className="form-group">
-              <label>YouTube URL:</label>
+              <label htmlFor="youtube-url">YouTube URL:</label>
               <input
+                id="youtube-url"
                 type="text"
                 placeholder="https://www.youtube.com/watch?v=..."
                 value={youtubeUrl}
@@ -460,8 +471,9 @@ function App() {
             </div>
 
             <div className="form-group">
-              <label>Output Format:</label>
+              <label htmlFor="youtube-format">Output Format:</label>
               <select
+                id="youtube-format"
                 value={format}
                 onChange={(e) => setFormat(e.target.value)}
                 disabled={loading}
@@ -477,8 +489,9 @@ function App() {
 
             {['mp3', 'ogg', 'aac', 'm4a'].includes(format) && (
               <div className="form-group">
-                <label>Bitrate (kbps): {quality}</label>
+                <label htmlFor="youtube-quality">Bitrate (kbps): {quality}</label>
                 <input
+                  id="youtube-quality"
                   type="range"
                   min="64"
                   max="320"
@@ -504,8 +517,9 @@ function App() {
           <div className="section">
             <h2>Edit Audio Metadata</h2>
             <div className="form-group">
-              <label>Select Audio File:</label>
+              <label htmlFor="metadata-file">Select Audio File:</label>
               <input
+                id="metadata-file"
                 type="file"
                 accept="audio/*"
                 onChange={handleFileChange}
@@ -514,8 +528,9 @@ function App() {
             </div>
 
             <div className="form-group">
-              <label>Artist:</label>
+              <label htmlFor="artist">Artist:</label>
               <input
+                id="artist"
                 type="text"
                 placeholder="Artist name"
                 value={metadata.artist}
@@ -527,8 +542,9 @@ function App() {
             </div>
 
             <div className="form-group">
-              <label>Title:</label>
+              <label htmlFor="title">Title:</label>
               <input
+                id="title"
                 type="text"
                 placeholder="Song title"
                 value={metadata.title}
@@ -540,8 +556,9 @@ function App() {
             </div>
 
             <div className="form-group">
-              <label>Album:</label>
+              <label htmlFor="album">Album:</label>
               <input
+                id="album"
                 type="text"
                 placeholder="Album name"
                 value={metadata.album}
@@ -553,8 +570,9 @@ function App() {
             </div>
 
             <div className="form-group">
-              <label>Genre:</label>
+              <label htmlFor="genre">Genre:</label>
               <input
+                id="genre"
                 type="text"
                 placeholder="Music genre"
                 value={metadata.genre}
@@ -577,26 +595,30 @@ function App() {
 
         {loading && (
           <div className="progress-container">
-            <div className="progress-bar">
+            <div className="progress-bar" role="progressbar"
+              aria-label="Approximate conversion progress"
+              aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}>
               <div 
                 className="progress-fill" 
-                style={{ width: `${progress}%` }}
+                style={{ transform: `scaleX(${progress / 100})` }}
               />
             </div>
             <span className="progress-text">{Math.round(progress)}%</span>
           </div>
         )}
 
-        {message && (
-          <div className={`message ${message.includes('✅') ? 'success' : 'error'}`}>
-            {message}
-          </div>
-        )}
+        <div role="status" aria-atomic="true">
+          {message && (
+            <div className={`message ${message.includes('✅') ? 'success' : 'error'}`}>
+              {message}
+            </div>
+          )}
+        </div>
 
         {downloadUrl && (
           <div className="download-section">
             <h3>🎧 Preview</h3>
-            <audio controls src={previewUrl} className="audio-preview">
+            <audio controls src={previewUrl} className="audio-preview" aria-label="Converted audio preview">
               Your browser does not support the audio element.
             </audio>
             <p className="filename-preview">
@@ -607,7 +629,7 @@ function App() {
             </button>
           </div>
         )}
-      </div>
+      </main>
 
       <footer>
         <p>Powered by FFmpeg & yt-dlp | Made with ❤️</p>

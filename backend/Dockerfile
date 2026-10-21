@@ -1,8 +1,8 @@
 # Build stage
-FROM rust:1.89-slim AS builder
+FROM rust:1-slim-bookworm AS builder
 
 # Install dependencies for building
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     pkg-config \
     libssl-dev \
     && rm -rf /var/lib/apt/lists/*
@@ -22,13 +22,16 @@ RUN cargo build --release
 FROM debian:bookworm-slim
 
 # Install runtime dependencies: FFmpeg and yt-dlp
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     python3 \
-    python3-pip \
+    python3-venv \
     curl \
-    && pip3 install --break-system-packages yt-dlp \
+    && python3 -m venv /opt/yt-dlp \
+    && /opt/yt-dlp/bin/pip install --no-cache-dir yt-dlp \
     && rm -rf /var/lib/apt/lists/*
+
+ENV PATH="/opt/yt-dlp/bin:${PATH}"
 
 WORKDIR /app
 

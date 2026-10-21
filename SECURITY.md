@@ -9,6 +9,8 @@ We provide security updates for the latest version on the default branch.
 Please report security issues privately using GitHub Security Advisories:
 https://github.com/mbianchidev/anytrack-converter/security/advisories/new
 
+Include the affected revision, impact, and a minimal reproduction using synthetic media. Do not attach credentials, personal recordings, or customer files.
+
 If you cannot access that page, open a minimal issue asking for a security contact.
 
 ## Response Timeline

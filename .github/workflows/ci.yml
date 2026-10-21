@@ -12,18 +12,18 @@ permissions:
 jobs:
   backend:
     name: Backend (Rust)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
       - name: Cache cargo
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/bin/
@@ -47,17 +47,17 @@ jobs:
 
   frontend:
     name: Frontend (React)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
@@ -72,12 +72,30 @@ jobs:
 
   docker:
     name: Docker Build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Build backend image
-        run: docker build -t anytrack-backend ./backend
+        run: docker build --no-cache -t anytrack-backend ./backend
 
       - name: Build frontend image
-        run: docker build -t anytrack-frontend ./frontend
+        run: docker build --no-cache -t anytrack-frontend ./frontend
+
+      - name: Smoke test container startup
+        run: |
+          docker run -d --name anytrack-backend-smoke -p 127.0.0.1:18080:8080 anytrack-backend
+          docker run -d --name anytrack-frontend-smoke -p 127.0.0.1:13000:80 anytrack-frontend
+          for endpoint in http://127.0.0.1:18080/health http://127.0.0.1:13000; do
+            curl --fail --connect-timeout 5 --max-time 10 --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 60 "$endpoint"
+          done
+
+      - name: Container logs and cleanup
+        if: always()
+        run: |
+          for container in anytrack-backend-smoke anytrack-frontend-smoke; do
+            if docker container inspect "$container" > /dev/null 2>&1; then
+              docker logs "$container"
+              docker rm -f "$container"
+            fi
+          done

@@ -30,7 +30,7 @@ It is intended for single-user, local or trusted-network use, not as a public co
 
 ## Quickstart
 
-Use macOS, Linux, or WSL2 with Git, current stable Rust/Cargo, Node.js 24+ or 22.13+ within the 22.x line, FFmpeg, and yt-dlp installed. The media tools must be on the backend's `PATH`; see [platform installation instructions](docs/README.md#native-development-setup).
+Use macOS, Linux, or WSL2 with Git, current stable Rust/Cargo, Node.js 24+ or 22.13+ within the 22.x line, FFmpeg, and yt-dlp installed. The media tools must be on the backend's `PATH`; see [platform installation instructions](docs/user-guide.md#native-development-setup).
 
 Clone the source and start the API:
 
@@ -56,7 +56,7 @@ The API health check should return `{"status":"healthy","version":"0.1.0"}`:
 curl --fail http://localhost:8080/health
 ```
 
-**Docker users:** the current ARM64 backend image can build but fail to start because of a glibc mismatch. Use the native path above or read the [Docker setup and limitation](docs/README.md#docker-compose-setup).
+Prefer containers? Follow the [Docker Compose quickstart](docs/user-guide.md#docker-compose-setup).
 
 ## Why AnyTrack Converter
 
@@ -70,7 +70,7 @@ YouTube extraction still contacts the source service through yt-dlp. Only conver
 
 The [React](https://react.dev/)/[Vite](https://vite.dev/) interface calls a Rust/[Actix-web](https://actix.rs/) API. The API stores uploads locally and runs [FFmpeg](https://ffmpeg.org/) for conversion or metadata updates; [yt-dlp](https://github.com/yt-dlp/yt-dlp) downloads YouTube media before audio extraction.
 
-Successful requests return a file ID for browser preview and download. Generated files remain on disk until you remove them. Processing runs inside the request, not in a job queue; see the [architecture and development guide](docs/README.md#development-and-project-layout).
+Successful requests return a file ID for browser preview and download. Generated files remain on disk until you remove them. Processing runs inside the request, not in a job queue; see the [architecture and development guide](docs/development.md#setup-and-architecture).
 
 ## Get started and configuration
 
@@ -78,11 +78,11 @@ The browser uses `http://localhost:8080` by default. Set `VITE_API_URL` when sta
 
 | Task | Guide |
 | --- | --- |
-| Install media tools and run from source | [Native setup](docs/README.md#native-development-setup) |
-| Build containers and understand their current limitation | [Docker Compose setup](docs/README.md#docker-compose-setup) |
-| Configure the API URL and understand storage/network defaults | [Configuration](docs/README.md#configuration) |
-| Use conversion, YouTube extraction, and metadata editing | [User workflows](docs/README.md#use-the-app) |
-| Call the API directly or diagnose failures | [API reference](docs/README.md#api) and [troubleshooting](docs/README.md#troubleshooting) |
+| Install media tools and run from source | [Native setup](docs/user-guide.md#native-development-setup) |
+| Build and run containers | [Docker Compose setup](docs/user-guide.md#docker-compose-setup) |
+| Configure the API URL and understand storage/network defaults | [Configuration](docs/user-guide.md#configuration) |
+| Use conversion, YouTube extraction, and metadata editing | [User workflows](docs/user-guide.md#use-the-app) |
+| Call the API directly or diagnose failures | [API reference](docs/development.md#api) and [troubleshooting](docs/user-guide.md#troubleshooting) |
 
 ## Features
 
@@ -92,11 +92,11 @@ The browser uses `http://localhost:8080` by default. Set `VITE_API_URL` when sta
 - **Metadata editing:** update artist, title, album, and genre without re-encoding the audio, where the file format supports those tags.
 - **Preview and download:** listen where the browser supports the codec, then save `<normalized-name>_anytrack.<format>`.
 
-See [known limitations](docs/README.md#limitations-and-deployment-safety) for codec support, simulated progress, fade-out behavior, and cleanup.
+See [known limitations](docs/user-guide.md#limitations-and-deployment-safety) for codec support, simulated progress, fade-out behavior, and cleanup.
 
 ## Documentation
 
-The [documentation index](docs/README.md) covers user setup, configuration, API examples, troubleshooting, architecture, and developer quality checks. For help, read [SUPPORT.md](SUPPORT.md) or [open an issue](https://github.com/mbianchidev/anytrack-converter/issues).
+The [documentation index](docs/README.md) links the user and developer guides. See [accessibility guidance](ACCESSIBILITY.md) and [SUPPORT.md](SUPPORT.md), or [open an issue](https://github.com/mbianchidev/anytrack-converter/issues) for help.
 
 ## AI policy
 
@@ -108,7 +108,7 @@ Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code
 
 ## Security
 
-See [SECURITY.md](SECURITY.md) for the existing security policy and [deployment safety guidance](docs/README.md#limitations-and-deployment-safety) before exposing the API. This app is not hardened for public access.
+See [SECURITY.md](SECURITY.md) for private vulnerability reporting and [deployment safety guidance](docs/user-guide.md#limitations-and-deployment-safety) before exposing the API. This app is not hardened for public access.
 
 ## License
 
