@@ -74,3 +74,9 @@ anytrack-converter/
 - Rust: `rustfmt` for formatting, `clippy` for linting.
 - JS/React: ESLint config in `frontend/eslint.config.js`.
 - Prefer small helper functions in `App.jsx` over inline logic blocks.
+
+## Development Documentation
+
+- [Setup, configuration, and API reference](docs/README.md)
+- [Architecture, quality checks, and synthetic test data](docs/README.md#development-and-project-layout)
+- [Contribution workflow](CONTRIBUTING.md) and [AI contribution policy](README.md#ai-policy)

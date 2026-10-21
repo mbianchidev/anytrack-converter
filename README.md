@@ -1,68 +1,46 @@
+<img src="frontend/public/favicon.svg" alt="AnyTrack Converter musical-note logo" width="72" height="72">
+
 # AnyTrack Converter
 
-AnyTrack Converter is a self-hosted web app for converting audio, extracting audio from YouTube videos, and updating audio metadata. A React/Vite interface sends files and URLs to a Rust/Actix-web API, which runs FFmpeg and yt-dlp on your machine.
+[![CI](https://github.com/mbianchidev/anytrack-converter/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mbianchidev/anytrack-converter/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+[Quickstart](#quickstart) | [Documentation](docs/README.md) | [Report a bug](.github/ISSUE_TEMPLATE/bug_report.md) | [Request a feature](.github/ISSUE_TEMPLATE/feature_request.md)
+
+![AnyTrack Converter in dark theme after converting sample-tone.wav to MP3 at 192 kbps, with a success message, audio preview, and Download File button](docs/images/anytrack-converter.png)
+
+*The current app after a real conversion of a six-second synthetic tone. No personal recordings or mocked conversion results are shown.*
+
+AnyTrack Converter is a self-hosted web app for converting audio, extracting audio from YouTube videos, and updating audio metadata. Process your files on your own machine instead of uploading them to a third-party conversion service.
 
 It is intended for single-user, local or trusted-network use, not as a public conversion service. There are no accounts, cloud storage, or background job queues.
 
-## Features
+## Contents
 
-- **Audio conversion:** upload audio readable by your FFmpeg installation and export MP3, WAV, FLAC, OGG, AAC, or M4A.
-- **YouTube extraction:** submit a video URL and download its audio in one of the same six formats.
-- **Conversion controls:** adjust lossy bitrate, MP3 constant/variable bitrate, sample rate, mono/stereo channels, fade-in, and reverse playback for uploaded files.
-- **Metadata editing:** update artist, title, album, and genre without re-encoding the audio, where the file format supports those tags.
-- **Preview and download:** listen in the browser where the codec is supported, then save a file named `<normalized-name>_anytrack.<format>`.
+- [Quickstart](#quickstart)
+- [Why AnyTrack Converter](#why-anytrack-converter)
+- [How it works](#how-it-works)
+- [Get started and configuration](#get-started-and-configuration)
+- [Features](#features)
+- [Documentation](#documentation)
+- [AI policy](#ai-policy)
+- [Contributing](#contributing)
+- [Security](#security)
+- [License](#license)
 
-MP3, OGG, AAC, and M4A expose a bitrate slider. WAV is uncompressed and FLAC is lossless. Input compatibility depends on FFmpeg; browser preview support is a separate limitation.
+## Quickstart
 
-## Get started
+Use macOS, Linux, or WSL2 with Git, current stable Rust/Cargo, Node.js 24+ or 22.13+ within the 22.x line, FFmpeg, and yt-dlp installed. The media tools must be on the backend's `PATH`; see [platform installation instructions](docs/README.md#native-development-setup).
 
-With Git installed, clone the repository:
+Clone the source and start the API:
 
 ```bash
 git clone https://github.com/mbianchidev/anytrack-converter.git
-cd anytrack-converter
-```
-
-## Native development setup
-
-The commands below target macOS and Linux; Windows users can use WSL2.
-
-### Requirements
-
-- Available ports **3000** and **8080**, disk space for uploaded/generated files, and internet access for dependencies and YouTube downloads.
-- A current stable [Rust toolchain and Cargo](https://rustup.rs/).
-- [Node.js](https://nodejs.org/) **24+**, or **22.13+ within the 22.x line**, with npm. Node 18 is not compatible with the current frontend tooling.
-- [FFmpeg](https://ffmpeg.org/download.html) and [yt-dlp](https://github.com/yt-dlp/yt-dlp#installation), both available on the backend process's `PATH`.
-
-Install the media tools using your platform's package manager, for example:
-
-```bash
-# macOS with Homebrew
-brew install ffmpeg yt-dlp
-
-# Debian/Ubuntu
-sudo apt-get update
-sudo apt-get install ffmpeg pipx
-pipx install yt-dlp
-pipx ensurepath
-```
-
-Open a new terminal after `pipx ensurepath` if necessary. Check `ffmpeg -version` and `yt-dlp --version` before starting the API.
-
-### Run the API
-
-From the repository root:
-
-```bash
-cd backend
+cd anytrack-converter/backend
 cargo run --release
 ```
 
-The server listens on `0.0.0.0:8080` and creates `uploads/` and `outputs/` relative to its working directory. Run it from `backend/` to use the same storage locations as Compose.
-
-### Run the frontend
-
-In a second terminal, from the repository root:
+In a second terminal, from the cloned repository:
 
 ```bash
 cd frontend
@@ -70,194 +48,68 @@ npm ci
 npm run dev
 ```
 
-Open the URL Vite prints, normally **http://localhost:3000**. Both servers must remain running.
+Open **http://localhost:3000**, select a file in **Convert Audio**, keep MP3 selected, then select **Convert**. A successful request shows the preview and **Download File** button pictured above.
 
-Check the API from another terminal:
+The API health check should return `{"status":"healthy","version":"0.1.0"}`:
 
 ```bash
 curl --fail http://localhost:8080/health
 ```
 
-The health response is:
+**Docker users:** the current ARM64 backend image can build but fail to start because of a glibc mismatch. Use the native path above or read the [Docker setup and limitation](docs/README.md#docker-compose-setup).
 
-```json
-{"status":"healthy","version":"0.1.0"}
-```
+## Why AnyTrack Converter
 
-## Docker Compose setup
+- **Keep uploads under your control:** audio processing happens on the machine hosting your API.
+- **Use one interface:** convert files, extract YouTube audio, and edit common tags without separate command-line workflows.
+- **Choose a small deployment:** there is no account service or database to operate. The tradeoff is local storage maintenance and no multi-user isolation.
 
-> **Known runtime limitation:** the backend [Dockerfile](backend/Dockerfile) builds with `rust:1.89-slim` but runs on `debian:bookworm-slim`. An ARM64 build currently exits with `GLIBC_2.39 not found` because the runtime's glibc is older than the binary requires. Image builds can succeed even though the API cannot start. Use the [native setup](#native-development-setup) until the build/runtime bases are made compatible.
+YouTube extraction still contacts the source service through yt-dlp. Only convert content you have permission to use.
 
-### Requirements
+## How it works
 
-- A running Docker-compatible engine and Docker Compose v2 or later (`docker compose`).
-- Linux containers. On macOS or Windows, use an engine with a Linux VM or WSL2 backend.
-- Available host ports **3000** and **8080**, disk space for uploaded/generated files, and internet access for builds and YouTube downloads.
+The [React](https://react.dev/)/[Vite](https://vite.dev/) interface calls a Rust/[Actix-web](https://actix.rs/) API. The API stores uploads locally and runs [FFmpeg](https://ffmpeg.org/) for conversion or metadata updates; [yt-dlp](https://github.com/yt-dlp/yt-dlp) downloads YouTube media before audio extraction.
 
-The images install Rust/Node build tools, FFmpeg, and yt-dlp; these are not needed on the host for container builds.
+Successful requests return a file ID for browser preview and download. Generated files remain on disk until you remove them. Processing runs inside the request, not in a job queue; see the [architecture and development guide](docs/README.md#development-and-project-layout).
 
-### Build and check
+## Get started and configuration
 
-From the repository root:
+The browser uses `http://localhost:8080` by default. Set `VITE_API_URL` when starting Vite or building the frontend to change it; changing the static container's runtime environment does not rebuild its JavaScript.
 
-```bash
-docker compose build --no-cache
-docker compose up -d --wait
-docker compose ps
-curl --fail http://localhost:8080/health
-```
-
-When the API is healthy, the frontend is at **http://localhost:3000** and the API is at **http://localhost:8080**. For startup errors, run `docker compose logs backend frontend`.
-
-Stop the services with `docker compose down`. Uploaded and generated files are bind-mounted to `backend/uploads/` and `backend/outputs/`; stopping or rebuilding containers does not delete them.
-
-**Network exposure:** the supplied Compose file publishes both ports on all host interfaces. For local-only access, change its port mappings to `127.0.0.1:3000:80` and `127.0.0.1:8080:8080`, or restrict access with your firewall. The native API also binds to all interfaces.
-
-## Use the app
-
-| Tab | Workflow |
+| Task | Guide |
 | --- | --- |
-| **Convert Audio** | Choose a file and output format, optionally adjust bitrate or advanced settings, then select **Convert**. |
-| **YouTube to Audio** | Paste a video URL, choose the output format and bitrate, then select **Convert from YouTube**. |
-| **Edit Metadata** | Choose a file, fill in the tags to change, then select **Update Metadata**. Blank fields are omitted, so they do not clear existing tags. |
+| Install media tools and run from source | [Native setup](docs/README.md#native-development-setup) |
+| Build containers and understand their current limitation | [Docker Compose setup](docs/README.md#docker-compose-setup) |
+| Configure the API URL and understand storage/network defaults | [Configuration](docs/README.md#configuration) |
+| Use conversion, YouTube extraction, and metadata editing | [User workflows](docs/README.md#use-the-app) |
+| Call the API directly or diagnose failures | [API reference](docs/README.md#api) and [troubleshooting](docs/README.md#troubleshooting) |
 
-Successful requests show a preview and **Download File** button. Browser defaults are MP3, 192 kbps, 44.1 kHz, and stereo. Advanced settings apply only to uploaded-file conversion; variable bitrate is implemented only for MP3.
+## Features
 
-Only download or convert content you have permission to use, and follow the source service's terms.
+- **Audio conversion:** upload audio readable by your FFmpeg installation and export MP3, WAV, FLAC, OGG, AAC, or M4A.
+- **YouTube extraction:** submit a video URL and download its audio in one of the same six formats.
+- **Conversion controls:** adjust lossy bitrate, MP3 constant/variable bitrate, sample rate, mono/stereo channels, fade-in, and reverse playback for uploaded files.
+- **Metadata editing:** update artist, title, album, and genre without re-encoding the audio, where the file format supports those tags.
+- **Preview and download:** listen where the browser supports the codec, then save `<normalized-name>_anytrack.<format>`.
 
-## Configuration
+See [known limitations](docs/README.md#limitations-and-deployment-safety) for codec support, simulated progress, fade-out behavior, and cleanup.
 
-| Setting | Current behavior |
-| --- | --- |
-| `VITE_API_URL` | Browser-facing API base URL, default `http://localhost:8080`. Vite reads it when starting the dev server or building the frontend. |
-| API address | Hardcoded to `0.0.0.0:8080` in `backend/src/main.rs`; there is no host/port environment setting. |
-| Storage | `./uploads` and `./outputs`, relative to the backend working directory. Compose bind-mounts the matching directories under `backend/`. |
-| `RUST_LOG` | Set to `info` by Compose, but the backend does not initialize a logging subscriber or read this variable. It is not currently a working log-level control. |
+## Documentation
 
-For native development, copy the supplied example and edit the API URL, then restart Vite:
+The [documentation index](docs/README.md) covers user setup, configuration, API examples, troubleshooting, architecture, and developer quality checks. For help, read [SUPPORT.md](SUPPORT.md) or [open an issue](https://github.com/mbianchidev/anytrack-converter/issues).
 
-```bash
-cp frontend/.env.example frontend/.env.local
-```
+## AI policy
 
-For a native production build, set the URL at build time:
+You are responsible for everything you contribute, including AI-assisted code, documentation, and assets. Review and test your contribution. You must be able to explain what the code does and why it is needed.
 
-```bash
-cd frontend
-VITE_API_URL=https://api.example.com npm run build
-```
+## Contributing
 
-**Container builds:** the frontend image serves static files with Nginx. Changing `frontend.environment.VITE_API_URL` in Compose does **not** change the already-built JavaScript. To use a different endpoint, put `VITE_API_URL=...` in `frontend/.env` before rebuilding the frontend image. The Docker build excludes `.env.local` and `.env.production.local`, but includes `.env`.
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md). Coding agents must also read [AGENTS.md](AGENTS.md) before editing.
 
-```bash
-docker compose build --no-cache frontend
-docker compose up -d --wait frontend
-```
+## Security
 
-The URL must be reachable by the **browser**, not just by another container. If you open the UI from another machine, `localhost` refers to that machine. Nginx does not proxy `/api`; configure a reachable API URL and HTTPS for both services when needed. `VITE_` values are public client configuration, not secrets.
-
-## API
-
-| Method and route | Request / response |
-| --- | --- |
-| `GET /health` | Returns `{"status":"healthy","version":"0.1.0"}`. |
-| `POST /api/convert` | Multipart: `file`, `format` (default `mp3`), optional `quality` in kbps and advanced fields below. |
-| `POST /api/youtube` | JSON: `url`, `format`, optional `quality` as a string, such as `"192"`. |
-| `POST /api/metadata` | Multipart: `file` and optional `artist`, `title`, `album`, `genre`. Preserves the input extension and copies audio streams. |
-| `GET /api/download/{file_id}` | Downloads a generated file; use the complete `file_id` returned by a successful request, including its extension. |
-
-The conversion form also accepts `bitrate_mode` (`constant` or `variable`), `sample_rate` (default `44100`), `channels` (`1` or `2`, default `2`), and `fade_in`, `fade_out`, `reverse` as `"true"`/`"false"` strings (default `"false"`). See the fade-out caveat below.
-
-For example, convert a local file:
-
-```bash
-curl --fail-with-body http://localhost:8080/api/convert \
-  -F 'file=@path/to/input.wav' \
-  -F 'format=mp3' \
-  -F 'quality=192'
-```
-
-A successful conversion returns JSON shaped like:
-
-```json
-{
-  "success": true,
-  "message": "Conversion successful",
-  "file_id": "<uuid>.mp3",
-  "original_name": "input"
-}
-```
-
-Download using that response's `file_id`:
-
-```bash
-curl --fail -o converted.mp3 \
-  'http://localhost:8080/api/download/<file_id>'
-```
-
-YouTube requests use JSON instead:
-
-```json
-{
-  "url": "https://www.youtube.com/watch?v=...",
-  "format": "mp3",
-  "quality": "192"
-}
-```
-
-Conversion and metadata handlers use `success`, `message`, `file_id`, and `original_name` for their JSON results. The health check has its own shape; downloads are file responses, and framework-level errors may not be JSON.
-
-## Limitations and deployment safety
-
-- **Not hardened for public access:** the API has no authentication, rate limiting, application-level upload quota, or strict URL/format validation, and CORS allows any origin. Restrict network access. Public deployment requires additional controls and HTTPS; CORS alone is not access control.
-- **Local storage needs maintenance:** generated files are not automatically expired or deleted after download. Input cleanup is attempted on successful conversion and some other paths, but failures can leave uploads or partial outputs behind. Monitor both directories and remove files only when no request or download is using them.
-- **Requests perform the work directly:** FFmpeg and yt-dlp run synchronously inside request handlers. There is no queue, cancellation, or per-job resource isolation. Large files can occupy a worker and consume substantial RAM, disk, and CPU.
-- **Progress is approximate:** the UI simulates percentages; it does not receive actual FFmpeg or yt-dlp progress.
-- **Fade-out is not an end-of-track fade:** the existing option uses `afade=t=out:d=3` without a start time, so it fades from the beginning rather than the final three seconds. Fade-in is fixed at three seconds.
-- **Media support varies:** FFmpeg selects encoders from its installed build. OGG may contain FLAC rather than Vorbis, in which case the bitrate setting does not apply. Metadata support depends on the container, and some output formats cannot play in every browser. YouTube extraction downloads video before conversion and depends on yt-dlp, network access, and upstream availability. Keep the media tools current.
-
-## Development and project layout
-
-The existing [CI workflow](.github/workflows/ci.yml) checks Rust formatting, Clippy, builds/tests, frontend lint/build, and Docker image builds.
-
-```bash
-# From backend/
-cargo fmt --check
-cargo clippy -- -D warnings
-cargo build --release
-cargo test
-
-# From frontend/ after npm ci
-npm run lint
-npm run build
-```
-
-Vite provides frontend hot reload with `npm run dev`. Backend reload is optional via `cargo watch -x run` if you separately install `cargo-watch`.
-
-| Path | Purpose |
-| --- | --- |
-| [`backend/src/main.rs`](backend/src/main.rs) | Actix routes, FFmpeg/yt-dlp commands, and local storage. |
-| [`frontend/src/App.jsx`](frontend/src/App.jsx) | React interface and API calls; styles are in `App.css`. |
-| [`frontend/vite.config.js`](frontend/vite.config.js) | Development server configuration. |
-| [`frontend/nginx.conf`](frontend/nginx.conf) | Static frontend serving in the production image. |
-| [`docker-compose.yml`](docker-compose.yml) | Service builds, published ports, storage mounts, and backend health check. |
-
-## Documentation and contributing
-
-Contributions are welcome. See the [contribution guide](CONTRIBUTING.md) and [code of conduct](CODE_OF_CONDUCT.md). The current setup requirements above reflect the dependency lockfile.
-
-For help, read [SUPPORT.md](SUPPORT.md) or [open an issue](https://github.com/mbianchidev/anytrack-converter/issues). Report vulnerabilities privately using the process in [SECURITY.md](SECURITY.md).
+See [SECURITY.md](SECURITY.md) for the existing security policy and [deployment safety guidance](docs/README.md#limitations-and-deployment-safety) before exposing the API. This app is not hardened for public access.
 
 ## License
 
-[MIT](LICENSE).
-
-## Acknowledgments
-
-- [FFmpeg](https://ffmpeg.org/) - Powerful multimedia framework
-- [yt-dlp](https://github.com/yt-dlp/yt-dlp) - YouTube video downloader
-- [Actix-web](https://actix.rs/) - Rust web framework
-- [React](https://react.dev/) - Frontend library
-- [Vite](https://vite.dev/) - Build tool
-
-Created by [Matteo Bianchi](https://github.com/mbianchidev).
+Licensed under the [MIT License](LICENSE). Created by [Matteo Bianchi](https://github.com/mbianchidev).
