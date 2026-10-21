@@ -1,273 +1,115 @@
+<img src="frontend/public/favicon.svg" alt="AnyTrack Converter musical-note logo" width="72" height="72">
+
 # AnyTrack Converter
 
-Convert any audio file or YouTube video to any format you want!
+[![CI](https://github.com/mbianchidev/anytrack-converter/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mbianchidev/anytrack-converter/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-## Features
+[Quickstart](#quickstart) | [Documentation](docs/README.md) | [Report a bug](.github/ISSUE_TEMPLATE/bug_report.md) | [Request a feature](.github/ISSUE_TEMPLATE/feature_request.md)
 
-- 🎵 **Audio File Conversion**: Convert between MP3, WAV, FLAC, OGG, AAC, and M4A formats
-- 🎬 **YouTube to Audio**: Extract audio from YouTube videos in your preferred format
-- 🎚️ **Quality Control**: Adjust bitrate/quality for lossy formats (MP3, OGG, AAC, M4A)
-- 📝 **Metadata Editing**: Edit artist, title, album, and genre information
-- 🚀 **High Performance**: Built with Rust backend for fast processing
-- 🎨 **Modern UI**: Clean and intuitive React frontend
-- 🐳 **Easy Deployment**: Fully containerized with Docker Compose
+![AnyTrack Converter in dark theme after converting sample-tone.wav to MP3 at 192 kbps, with a success message, audio preview, and Download File button](docs/images/anytrack-converter.png)
 
-## Tech Stack
+*The current app after a real conversion of a six-second synthetic tone. No personal recordings or mocked conversion results are shown.*
 
-- **Backend**: Rust with Actix-web
-- **Frontend**: React with Vite
-- **Audio Processing**: FFmpeg
-- **Video Download**: yt-dlp
-- **Deployment**: Docker & Docker Compose
+AnyTrack Converter is a self-hosted web app for converting audio, extracting audio from YouTube videos, and updating audio metadata. Process your files on your own machine instead of uploading them to a third-party conversion service.
 
-## Quick Start
+It is intended for single-user, local or trusted-network use, not as a public conversion service. There are no accounts, cloud storage, or background job queues.
 
-### Prerequisites
+## Contents
 
-- Docker and Docker Compose installed on your system
+- [Quickstart](#quickstart)
+- [Why AnyTrack Converter](#why-anytrack-converter)
+- [How it works](#how-it-works)
+- [Get started and configuration](#get-started-and-configuration)
+- [Features](#features)
+- [Documentation](#documentation)
+- [AI policy](#ai-policy)
+- [Contributing](#contributing)
+- [Security](#security)
+- [License](#license)
 
-### Running with Docker Compose (Recommended)
+## Quickstart
 
-1. Clone the repository:
+Use macOS, Linux, or WSL2 with Git, current stable Rust/Cargo, Node.js 24+ or 22.13+ within the 22.x line, FFmpeg, and yt-dlp installed. The media tools must be on the backend's `PATH`; see [platform installation instructions](docs/user-guide.md#native-development-setup).
+
+Clone the source and start the API:
+
 ```bash
 git clone https://github.com/mbianchidev/anytrack-converter.git
-cd anytrack-converter
+cd anytrack-converter/backend
+cargo run --release
 ```
 
-2. Start the application:
-```bash
-docker-compose up --build
-```
+In a second terminal, from the cloned repository:
 
-3. Access the application:
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8080
-
-### Manual Setup
-
-#### Backend Setup
-
-1. Install Rust (if not already installed):
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
-
-2. Install FFmpeg and yt-dlp:
-```bash
-# Ubuntu/Debian
-sudo apt-get update
-sudo apt-get install ffmpeg python3-pip
-pip3 install yt-dlp
-
-# macOS
-brew install ffmpeg yt-dlp
-```
-
-3. Build and run the backend:
-```bash
-cd backend
-cargo build --release
-cargo run
-```
-
-The API will be available at http://localhost:8080
-
-#### Frontend Setup
-
-1. Install Node.js (v18 or higher)
-
-2. Install dependencies and run:
 ```bash
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
-The frontend will be available at http://localhost:3000
+Open **http://localhost:3000**, select a file in **Convert Audio**, keep MP3 selected, then select **Convert**. A successful request shows the preview and **Download File** button pictured above.
 
-## API Endpoints
+The API health check should return `{"status":"healthy","version":"0.1.0"}`:
 
-### Health Check
-```
-GET /health
-```
-
-### Convert Audio File
-```
-POST /api/convert
-Content-Type: multipart/form-data
-
-Parameters:
-- file: Audio file to convert
-- format: Output format (mp3, wav, flac, ogg, aac, m4a)
-- quality: Bitrate in kbps (optional, for lossy formats)
-```
-
-### Convert YouTube Video
-```
-POST /api/youtube
-Content-Type: application/json
-
-Body:
-{
-  "url": "https://www.youtube.com/watch?v=...",
-  "format": "mp3",
-  "quality": "192"
-}
-```
-
-### Update Metadata
-```
-POST /api/metadata
-Content-Type: multipart/form-data
-
-Parameters:
-- file: Audio file
-- artist: Artist name (optional)
-- title: Song title (optional)
-- album: Album name (optional)
-- genre: Music genre (optional)
-```
-
-### Download File
-```
-GET /api/download/{filename}
-```
-
-## Usage Examples
-
-### Convert Audio File
-1. Go to the "Convert Audio" tab
-2. Select an audio file from your computer
-3. Choose the output format
-4. Adjust quality/bitrate if needed
-5. Click "Convert"
-6. Download the converted file
-
-### YouTube to Audio
-1. Go to the "YouTube to Audio" tab
-2. Paste a YouTube video URL
-3. Select the output format
-4. Adjust quality/bitrate if needed
-5. Click "Convert from YouTube"
-6. Download the extracted audio
-
-### Edit Metadata
-1. Go to the "Edit Metadata" tab
-2. Select an audio file
-3. Fill in the metadata fields (artist, title, album, genre)
-4. Click "Update Metadata"
-5. Download the file with updated metadata
-
-## Configuration
-
-### Environment Variables
-
-Backend:
-- `RUST_LOG`: Log level (default: info)
-
-Frontend:
-- `VITE_API_URL`: Backend API URL (default: http://localhost:8080)
-
-## Development
-
-### Backend Development
 ```bash
-cd backend
-cargo watch -x run  # Auto-reload on changes
+curl --fail http://localhost:8080/health
 ```
 
-### Frontend Development
-```bash
-cd frontend
-npm run dev  # Hot module replacement enabled
-```
+Prefer containers? Follow the [Docker Compose quickstart](docs/user-guide.md#docker-compose-setup).
 
-## Project Structure
+## Why AnyTrack Converter
 
-```
-anytrack-converter/
-├── backend/
-│   ├── src/
-│   │   └── main.rs          # Rust backend server
-│   ├── Cargo.toml           # Rust dependencies
-│   ├── Dockerfile           # Backend container
-│   └── .dockerignore
-├── frontend/
-│   ├── src/
-│   │   ├── App.jsx          # Main React component
-│   │   ├── App.css          # Styles
-│   │   ├── main.jsx         # React entry point
-│   │   └── index.css        # Global styles
-│   ├── package.json         # Node dependencies
-│   ├── vite.config.js       # Vite configuration
-│   ├── nginx.conf           # Nginx config for production
-│   ├── Dockerfile           # Frontend container
-│   └── .dockerignore
-├── docker-compose.yml       # Docker Compose configuration
-├── README.md                # This file
-└── LICENSE                  # MIT License
-```
+- **Keep uploads under your control:** audio processing happens on the machine hosting your API.
+- **Use one interface:** convert files, extract YouTube audio, and edit common tags without separate command-line workflows.
+- **Choose a small deployment:** there is no account service or database to operate. The tradeoff is local storage maintenance and no multi-user isolation.
 
-## Supported Formats
+YouTube extraction still contacts the source service through yt-dlp. Only convert content you have permission to use.
 
-### Input Formats
-- MP3 (MPEG Audio Layer 3)
-- WAV (Waveform Audio File Format)
-- FLAC (Free Lossless Audio Codec)
-- OGG (Ogg Vorbis)
-- AAC (Advanced Audio Coding)
-- M4A (MPEG-4 Audio)
-- And many more supported by FFmpeg
+## How it works
 
-### Output Formats
-- MP3 - Lossy compression (adjustable bitrate)
-- WAV - Uncompressed audio
-- FLAC - Lossless compression
-- OGG - Lossy compression (adjustable bitrate)
-- AAC - Lossy compression (adjustable bitrate)
-- M4A - MPEG-4 audio (adjustable bitrate)
+The [React](https://react.dev/)/[Vite](https://vite.dev/) interface calls a Rust/[Actix-web](https://actix.rs/) API. The API stores uploads locally and runs [FFmpeg](https://ffmpeg.org/) for conversion or metadata updates; [yt-dlp](https://github.com/yt-dlp/yt-dlp) downloads YouTube media before audio extraction.
+
+Successful requests return a file ID for browser preview and download. Generated files remain on disk until you remove them. Processing runs inside the request, not in a job queue; see the [architecture and development guide](docs/development.md#setup-and-architecture).
+
+## Get started and configuration
+
+The browser uses `http://localhost:8080` by default. Set `VITE_API_URL` when starting Vite or building the frontend to change it; changing the static container's runtime environment does not rebuild its JavaScript.
+
+| Task | Guide |
+| --- | --- |
+| Install media tools and run from source | [Native setup](docs/user-guide.md#native-development-setup) |
+| Build and run containers | [Docker Compose setup](docs/user-guide.md#docker-compose-setup) |
+| Configure the API URL and understand storage/network defaults | [Configuration](docs/user-guide.md#configuration) |
+| Use conversion, YouTube extraction, and metadata editing | [User workflows](docs/user-guide.md#use-the-app) |
+| Call the API directly or diagnose failures | [API reference](docs/development.md#api) and [troubleshooting](docs/user-guide.md#troubleshooting) |
+
+## Features
+
+- **Audio conversion:** upload audio readable by your FFmpeg installation and export MP3, WAV, FLAC, OGG, AAC, or M4A.
+- **YouTube extraction:** submit a video URL and download its audio in one of the same six formats.
+- **Conversion controls:** adjust lossy bitrate, MP3 constant/variable bitrate, sample rate, mono/stereo channels, fade-in, and reverse playback for uploaded files.
+- **Metadata editing:** update artist, title, album, and genre without re-encoding the audio, where the file format supports those tags.
+- **Preview and download:** listen where the browser supports the codec, then save `<normalized-name>_anytrack.<format>`.
+
+See [known limitations](docs/user-guide.md#limitations-and-deployment-safety) for codec support, simulated progress, fade-out behavior, and cleanup.
+
+## Documentation
+
+The [documentation index](docs/README.md) links the user and developer guides. See [accessibility guidance](ACCESSIBILITY.md) and [SUPPORT.md](SUPPORT.md), or [open an issue](https://github.com/mbianchidev/anytrack-converter/issues) for help.
+
+## AI policy
+
+You are responsible for everything you contribute, including AI-assisted code, documentation, and assets. Review and test your contribution. You must be able to explain what the code does and why it is needed.
 
 ## Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md). Coding agents must also read [AGENTS.md](AGENTS.md) before editing.
 
 ## Security
 
-### Production Considerations
-
-When deploying this application in production, please consider the following security measures:
-
-1. **CORS Configuration**: Update the backend CORS settings to restrict allowed origins instead of using `allow_any_origin()`
-2. **HTTPS**: Always use HTTPS in production environments
-3. **File Upload Limits**: Configure appropriate file size limits to prevent abuse
-4. **Rate Limiting**: Implement rate limiting to prevent denial of service attacks
-5. **Input Validation**: Validate YouTube URLs and file types on both client and server
-6. **Temporary File Cleanup**: Monitor disk space and implement cleanup policies for old files
-7. **Environment Variables**: Use environment variables for sensitive configuration
-
-### Known Limitations
-
-- Temporary files are stored locally and should be cleaned up regularly
-- No authentication/authorization system is included
-- File storage is not distributed or replicated
+See [SECURITY.md](SECURITY.md) for private vulnerability reporting and [deployment safety guidance](docs/user-guide.md#limitations-and-deployment-safety) before exposing the API. This app is not hardened for public access.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- [FFmpeg](https://ffmpeg.org/) - Powerful multimedia framework
-- [yt-dlp](https://github.com/yt-dlp/yt-dlp) - YouTube video downloader
-- [Actix-web](https://actix.rs/) - Rust web framework
-- [React](https://react.dev/) - Frontend library
-- [Vite](https://vite.dev/) - Build tool
-
-## Support
-
-If you encounter any issues or have questions, please open an issue on GitHub.
-
----
-
-Made with ❤️ by [Matteo Bianchi](https://github.com/mbianchidev)
+Licensed under the [MIT License](LICENSE). Created by [Matteo Bianchi](https://github.com/mbianchidev).

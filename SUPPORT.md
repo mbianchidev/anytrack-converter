@@ -13,8 +13,10 @@ https://github.com/mbianchidev/anytrack-converter/issues
 
 ## Community Resources
 
-- Documentation: README.md
-- Security policy: SECURITY.md
+- [User and developer documentation](docs/README.md)
+- [Troubleshooting](docs/user-guide.md#troubleshooting)
+- [Accessibility guidance and reporting](ACCESSIBILITY.md)
+- [Security policy](SECURITY.md)
 
 ## Commercial Support
 

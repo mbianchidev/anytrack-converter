@@ -31,7 +31,7 @@ Out of scope:
 - `POST /api/metadata` (multipart) -> `file`, optional metadata fields
 - `GET /api/download/{file_id}` -> binary file
 
-All responses use the `ApiResponse` shape with `success`, `message`, and optional `file_id`/`original_name`.
+Conversion and metadata handlers use `ApiResponse` with `success`, `message`, and optional `file_id`/`original_name`. Health has its own shape and downloads are binary; framework-level failures may not be JSON.
 
 ## Directory Structure
 
@@ -74,3 +74,12 @@ anytrack-converter/
 - Rust: `rustfmt` for formatting, `clippy` for linting.
 - JS/React: ESLint config in `frontend/eslint.config.js`.
 - Prefer small helper functions in `App.jsx` over inline logic blocks.
+
+## Development Documentation
+
+- [Setup, configuration, and API reference](docs/README.md)
+- [Architecture, quality checks, accessibility, and synthetic test data](docs/development.md)
+- [Local container builds and release scope](docs/development.md#local-container-builds-and-releases)
+- [Contribution workflow](CONTRIBUTING.md) and [AI contribution policy](README.md#ai-policy)
+
+Run `cargo fmt --check`, `cargo clippy -- -D warnings`, `cargo build --release`, and `cargo test` from `backend/`. Run `npm ci`, `npm run lint`, and `npm run build` from `frontend/` after changing dependencies or restoring a missing install. Use synthetic media and follow [ACCESSIBILITY.md](ACCESSIBILITY.md) for UI changes.

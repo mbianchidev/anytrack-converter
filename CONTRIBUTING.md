@@ -6,19 +6,20 @@ Thanks for your interest in contributing! This guide helps you get set up and su
 
 ### Prerequisites
 
-- Docker + Docker Compose (recommended)
-- Node.js 18+ (frontend)
-- Rust toolchain (backend)
-- FFmpeg and yt-dlp (for local non-Docker runs)
+Use the current [native setup requirements](docs/user-guide.md#native-development-setup) for Rust, Node.js, FFmpeg, and yt-dlp, or follow the [Docker guide](docs/user-guide.md#docker-compose-setup).
 
 ### Setup
 
 ```bash
 git clone https://github.com/mbianchidev/anytrack-converter.git
 cd anytrack-converter
-
-docker compose up --build
 ```
+
+Follow the [native setup](docs/user-guide.md#native-development-setup) to start the API and frontend in separate terminals, then verify the health endpoint. See the [developer guide](docs/development.md) for architecture, quality checks, accessibility verification, and local container builds.
+
+Coding agents must read [AGENTS.md](AGENTS.md) before editing. All contributors should follow the [AI contribution policy](README.md#ai-policy) and [Code of Conduct](CODE_OF_CONDUCT.md).
+
+Follow [ACCESSIBILITY.md](ACCESSIBILITY.md) when changing the interface or documentation.
 
 ## Development Workflow
 
@@ -26,6 +27,8 @@ docker compose up --build
 2. Make your changes with small, focused commits.
 3. Ensure linting and basic checks pass.
 4. Open a pull request with a clear summary.
+
+Use generated audio and mock metadata for tests. Do not include personal recordings, customer files, credentials, or other real personal data in fixtures or screenshots.
 
 ## Code Standards
 
@@ -53,6 +56,7 @@ docker compose up --build
 - Search existing issues before opening a new one.
 - Include clear reproduction steps for bugs.
 - Provide expected vs actual behavior.
+- Report vulnerabilities using the process in [SECURITY.md](SECURITY.md), not by publishing exploit details in ordinary issues.
 
 ## Communication Channels
 
