@@ -37,11 +37,13 @@ npm audit --audit-level=low
 
 There are currently no Rust unit tests or frontend test script. Use synthetic audio and mock metadata for browser/API checks; never use personal recordings or customer files. Verify successful conversion, preview, download filename, metadata updates, and failure messages.
 
-The [CI workflow](../.github/workflows/ci.yml) runs Rust format/Clippy/build/tests, frontend install/lint/build, and no-cache Docker builds with backend/frontend HTTP startup smoke tests. It pins Ubuntu 24.04 intentionally rather than following the migrating `ubuntu-latest` label. The official checkout/cache/setup-node actions use Node.js 24; frontend builds also use Node.js 24.
+The [CI workflow](../.github/workflows/ci.yml) runs Rust format/Clippy/build/tests, frontend install/lint/build, and no-cache Docker builds with backend/frontend HTTP startup smoke tests. All three jobs use the x64 `ubuntu-latest` image so they follow GitHub's supported Ubuntu image migrations instead of depending on a fixed release. The official checkout/cache/setup-node actions use Node.js 24; frontend builds also use Node.js 24.
 
 CI still runs on every pull request update, including drafts, and on pushes to `main`. A new run cancels obsolete work only for the same pull request; `main` runs have independent concurrency groups and never cancel one another. The three job names and their checks are unchanged, and GitHub-managed CodeQL analysis is independent of this workflow.
 
-Commit `backend/Cargo.lock` when updating Rust dependencies. Native CI and Docker builds use `--locked` so they resolve the same dependency versions. The Cargo cache includes downloaded crate sources and compiled dependencies, keyed by runner OS/architecture, compiler version, lockfile, manifest, and Cargo configuration. It excludes Cargo's executable directory so a restored cache cannot replace the selected toolchain. Cache misses still run every check; no tests or builds are skipped on hits. Rust build and test worker counts use the runner's available CPUs.
+Commit `backend/Cargo.lock` when updating Rust dependencies. Native CI and Docker builds use `--locked` so they resolve the same dependency versions. The Cargo cache includes downloaded crate sources and compiled dependencies, keyed by runner OS/architecture, image OS (`ImageOS`), compiler version, lockfile, manifest, and Cargo configuration. The image OS boundary prevents restoring compiled dependencies across Ubuntu release migrations while allowing reuse across image refreshes within the same release; there is no cross-image restore prefix. It excludes Cargo's executable directory so a restored cache cannot replace the selected toolchain. Cache misses still run every check; no tests or builds are skipped on hits. Rust build and test worker counts use the runner's available CPUs.
+
+The npm cache contains downloaded packages, not `node_modules`; `npm ci` always installs dependencies for the active runner. Docker builds remain uncached against the existing container base images, so changing the host runner does not change the containers' distribution or binary ABI requirements.
 
 ## Accessibility checks
 

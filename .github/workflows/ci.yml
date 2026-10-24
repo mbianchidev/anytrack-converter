@@ -16,7 +16,7 @@ concurrency:
 jobs:
   backend:
     name: Backend (Rust)
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend
@@ -29,10 +29,12 @@ jobs:
         with:
           components: rustfmt, clippy
 
-      - name: Configure Rust workers
+      - name: Configure Rust runner
+        id: runner
         run: |
           workers=$(nproc)
           printf 'CARGO_BUILD_JOBS=%s\nRUST_TEST_THREADS=%s\n' "$workers" "$workers" >> "$GITHUB_ENV"
+          printf 'image-os=%s\n' "${ImageOS:?Missing runner image OS identifier}" >> "$GITHUB_OUTPUT"
 
       - name: Cache cargo
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
@@ -41,7 +43,7 @@ jobs:
             ~/.cargo/registry/
             ~/.cargo/git/
             backend/target/
-          key: cargo-${{ runner.os }}-${{ runner.arch }}-${{ steps.rust.outputs.cachekey }}-${{ hashFiles('backend/Cargo.lock', 'backend/Cargo.toml', '.cargo/config*', 'backend/.cargo/config*') }}
+          key: cargo-${{ runner.os }}-${{ runner.arch }}-${{ steps.runner.outputs.image-os }}-${{ steps.rust.outputs.cachekey }}-${{ hashFiles('backend/Cargo.lock', 'backend/Cargo.toml', '.cargo/config*', 'backend/.cargo/config*') }}
 
       - name: Check formatting
         run: cargo fmt --check
@@ -57,7 +59,7 @@ jobs:
 
   frontend:
     name: Frontend (React)
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: frontend
@@ -82,7 +84,7 @@ jobs:
 
   docker:
     name: Docker Build
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
