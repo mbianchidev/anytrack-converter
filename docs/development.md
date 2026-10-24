@@ -25,9 +25,9 @@ Runtime messages go to the backend terminal or container logs. Inspect browser c
 ```bash
 # From backend/
 cargo fmt --check
-cargo clippy -- -D warnings
-cargo build --release
-cargo test
+cargo clippy --locked -- -D warnings
+cargo build --locked --release
+cargo test --locked
 
 # From frontend/ after npm ci
 npm run lint
@@ -38,6 +38,10 @@ npm audit --audit-level=low
 There are currently no Rust unit tests or frontend test script. Use synthetic audio and mock metadata for browser/API checks; never use personal recordings or customer files. Verify successful conversion, preview, download filename, metadata updates, and failure messages.
 
 The [CI workflow](../.github/workflows/ci.yml) runs Rust format/Clippy/build/tests, frontend install/lint/build, and no-cache Docker builds with backend/frontend HTTP startup smoke tests. It pins Ubuntu 24.04 intentionally rather than following the migrating `ubuntu-latest` label. The official checkout/cache/setup-node actions use Node.js 24; frontend builds also use Node.js 24.
+
+CI still runs on every pull request update, including drafts, and on pushes to `main`. A new run cancels obsolete work only for the same pull request; `main` runs have independent concurrency groups and never cancel one another. The three job names and their checks are unchanged, and GitHub-managed CodeQL analysis is independent of this workflow.
+
+Commit `backend/Cargo.lock` when updating Rust dependencies. Native CI and Docker builds use `--locked` so they resolve the same dependency versions. The Cargo cache includes downloaded crate sources and compiled dependencies, keyed by runner OS/architecture, compiler version, lockfile, manifest, and Cargo configuration. It excludes Cargo's executable directory so a restored cache cannot replace the selected toolchain. Cache misses still run every check; no tests or builds are skipped on hits. Rust build and test worker counts use the runner's available CPUs.
 
 ## Accessibility checks
 

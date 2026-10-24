@@ -2,7 +2,6 @@
 backend/target/
 backend/uploads/
 backend/outputs/
-backend/Cargo.lock
 
 # Frontend
 frontend/node_modules/
