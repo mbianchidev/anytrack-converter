@@ -21,7 +21,7 @@ The commands below target macOS and Linux; Windows users can use WSL2. Run them 
 
 - Available ports **3000** and **8080**, disk space for uploaded/generated files, and internet access for dependencies and YouTube downloads.
 - A current stable [Rust toolchain and Cargo](https://rustup.rs/).
-- [Node.js](https://nodejs.org/) **24+**, or **22.13+ within the 22.x line**, with npm. Node 18 is not compatible with the current frontend tooling.
+- [Node.js](https://nodejs.org/) **26.12.1** with npm is recommended and selected by the root [`.nvmrc`](../.nvmrc). **24+**, or **22.13+ within the 22.x line**, remain supported. Node 18 is not compatible with the current frontend tooling.
 - [FFmpeg](https://ffmpeg.org/download.html) and [yt-dlp](https://github.com/yt-dlp/yt-dlp#installation), both available on the backend process's `PATH`.
 
 Install the media tools using your platform's package manager, for example:
@@ -52,7 +52,14 @@ The server listens on `0.0.0.0:8080` and creates `uploads/` and `outputs/` relat
 
 ### Run the frontend
 
-In a second terminal, from the repository root:
+In a second terminal, from the repository root, select the repository's Node.js version if you use nvm:
+
+```bash
+nvm install
+nvm use
+```
+
+Then run the frontend:
 
 ```bash
 cd frontend
@@ -78,7 +85,7 @@ To update a source checkout, stop the servers, obtain the desired repository rev
 
 ## Docker Compose setup
 
-The backend builder and runtime both use Debian Bookworm so their glibc versions are compatible. The frontend builds with Node.js 24 and is served by Nginx. FFmpeg and an isolated yt-dlp Python environment are included in the backend image.
+The backend builder and runtime both use Debian Bookworm so their glibc versions are compatible. The frontend builds with Node.js 26.12.1 and is served by Nginx. FFmpeg and an isolated yt-dlp environment using Python 3.15.1 are included in the backend image.
 
 ### Requirements
 
