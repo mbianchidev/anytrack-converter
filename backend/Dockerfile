@@ -10,13 +10,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # Copy manifests
-COPY Cargo.toml ./
+COPY Cargo.toml Cargo.lock ./
 
 # Copy source code
 COPY src ./src
 
 # Build the application
-RUN cargo build --release
+RUN cargo build --locked --release
 
 # Runtime stage
 FROM debian:bookworm-slim
