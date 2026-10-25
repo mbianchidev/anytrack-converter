@@ -19,13 +19,11 @@ COPY src ./src
 RUN cargo build --locked --release
 
 # Runtime stage
-FROM debian:bookworm-slim
+FROM python:3.15.1-slim-bookworm
 
 # Install runtime dependencies: FFmpeg and yt-dlp
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
-    python3 \
-    python3-venv \
     curl \
     && python3 -m venv /opt/yt-dlp \
     && /opt/yt-dlp/bin/pip install --no-cache-dir yt-dlp \

@@ -37,7 +37,7 @@ npm audit --audit-level=low
 
 There are currently no Rust unit tests or frontend test script. Use synthetic audio and mock metadata for browser/API checks; never use personal recordings or customer files. Verify successful conversion, preview, download filename, metadata updates, and failure messages.
 
-The [CI workflow](../.github/workflows/ci.yml) runs Rust format/Clippy/build/tests, frontend install/lint/build, and no-cache Docker builds with backend/frontend HTTP startup smoke tests. All three jobs use the x64 `ubuntu-latest` image so they follow GitHub's supported Ubuntu image migrations instead of depending on a fixed release. The official checkout/cache/setup-node actions use Node.js 24; frontend builds also use Node.js 24.
+The [CI workflow](../.github/workflows/ci.yml) runs Rust format/Clippy/build/tests, frontend install/lint/build, and no-cache Docker builds with backend media-tool checks and backend/frontend HTTP startup smoke tests. All three jobs use the x64 `ubuntu-latest` image so they follow GitHub's supported Ubuntu image migrations instead of depending on a fixed release. The official checkout/cache/setup-node actions use their own Node.js 24 runtime; frontend builds use Node.js 26.12.1, selected from the root [`.nvmrc`](../.nvmrc). Keep that file and the frontend Docker build image on the same version.
 
 CI still runs on every pull request update, including drafts, and on pushes to `main`. A new run cancels obsolete work only for the same pull request; `main` runs have independent concurrency groups and never cancel one another. The three job names and their checks are unchanged, and GitHub-managed CodeQL analysis is independent of this workflow.
 
@@ -69,7 +69,7 @@ curl --fail http://localhost:3000
 docker compose down
 ```
 
-The backend build and runtime stages both use Debian Bookworm; keep that distribution boundary compatible when upgrading Rust. yt-dlp is installed in `/opt/yt-dlp`, a Python virtual environment on the runtime `PATH`. The frontend builder uses Node.js 24.
+The backend build and runtime stages both use Debian Bookworm; keep that distribution boundary compatible when upgrading Rust. The runtime uses the official Python 3.15.1 slim Bookworm image instead of the distribution's older Python. yt-dlp is installed in `/opt/yt-dlp`, a Python virtual environment on the runtime `PATH`. The frontend builder uses Node.js 26.12.1.
 
 The repository has source releases, not a distributed desktop app, published container registry, or signing/publishing workflow. Compose builds local service images; there is no additional release script to invoke. Do not publish images, tags, or releases as a validation step. See the [storage and network notes](user-guide.md#docker-compose-setup) before running containers. Native macOS and Linux containers are separate targets; document untested architectures.
 

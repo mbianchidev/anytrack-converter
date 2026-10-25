@@ -30,7 +30,7 @@ It is intended for single-user, local or trusted-network use, not as a public co
 
 ## Quickstart
 
-Use macOS, Linux, or WSL2 with Git, current stable Rust/Cargo, Node.js 24+ or 22.13+ within the 22.x line, FFmpeg, and yt-dlp installed. The media tools must be on the backend's `PATH`; see [platform installation instructions](docs/user-guide.md#native-development-setup).
+Use macOS, Linux, or WSL2 with Git, current stable Rust/Cargo, Node.js 26.12.1 (recommended; 24+ or 22.13+ within the 22.x line remain supported), FFmpeg, and yt-dlp installed. The media tools must be on the backend's `PATH`; see [platform installation instructions](docs/user-guide.md#native-development-setup).
 
 Clone the source and start the API:
 
