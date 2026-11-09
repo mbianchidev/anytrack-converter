@@ -192,7 +192,6 @@
   background: var(--control);
   text-align: center;
   cursor: pointer;
-  transition: background-color 150ms ease, border-color 150ms ease;
 }
 
 .file-picker.is-dragging {
@@ -410,7 +409,6 @@
   background: var(--accent);
   color: var(--button-text);
   font-weight: 600;
-  transition: border-color 150ms ease;
 }
 
 .button-primary svg {

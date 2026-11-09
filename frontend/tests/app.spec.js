@@ -143,6 +143,8 @@ test('blocks workflow switching during requests without simulated progress', asy
       await expect(button).toBeDisabled()
     }
     await expect(page.getByRole('status')).toContainText('Converting audio')
+    await expect(page.getByLabel('Replace audio file')).toBeDisabled()
+    await expect(page.getByLabel('Output format')).toBeDisabled()
     await expect(page.getByRole('progressbar')).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Converting...' })).toBeDisabled()
     await expectAccessible(page)
@@ -173,6 +175,12 @@ for (const workflow of [
     await page.getByRole('button', { name: workflow.action, exact: true }).click()
     try {
       await expect(page.getByRole('button', { name: workflow.pending, exact: true })).toBeDisabled()
+      if (workflow.endpoint === 'youtube') {
+        await expect(page.getByLabel('YouTube URL')).toBeDisabled()
+      } else {
+        await expect(page.getByLabel('Replace audio file')).toBeDisabled()
+        await expect(page.getByLabel('Artist', { exact: true })).toBeDisabled()
+      }
       for (const button of await page.getByRole('group', { name: 'Audio tools' }).getByRole('button').all()) {
         await expect(button).toBeDisabled()
       }
@@ -405,6 +413,26 @@ test('prevents duplicate downloads and revokes temporary object URLs', async ({ 
   expect(urls.revoked).toEqual(urls.created)
 })
 
+test('native pressed tool buttons support Tab, Enter, and Space', async ({ page }) => {
+  const tools = page.getByRole('group', { name: 'Audio tools' })
+  await page.keyboard.press('Tab')
+  await page.keyboard.press('Tab')
+  await expect(tools.getByRole('button', { name: 'Convert audio' })).toBeFocused()
+  await page.keyboard.press('Tab')
+  await page.keyboard.press('Enter')
+  await expect(tools.getByRole('button', { name: 'YouTube audio' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByLabel('YouTube URL')).toBeVisible()
+  await page.keyboard.press('Tab')
+  await page.keyboard.press('Space')
+  await expect(tools.getByRole('button', { name: 'Edit metadata' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByLabel('Artist', { exact: true })).toBeVisible()
+  await page.keyboard.press('Shift+Tab')
+  await page.keyboard.press('Shift+Tab')
+  await page.keyboard.press('Space')
+  await expect(tools.getByRole('button', { name: 'Convert audio' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByRole('button', { name: 'Convert file', exact: true })).toBeVisible()
+})
+
 test('works by keyboard with visible focus and native advanced controls', async ({ page }) => {
   await page.keyboard.press('Tab')
   await expect(page.getByRole('link', { name: 'Skip to main content' })).toBeFocused()
@@ -462,6 +490,17 @@ test('all workflows and expanded controls pass automated accessibility checks', 
   await page.getByRole('button', { name: 'Save metadata' }).click()
   await expect(page.getByRole('region', { name: 'Your file is ready' })).toBeVisible()
   await expectAccessible(page)
+})
+
+test('system theme changes preserve contrast with a selected input and result', async ({ page }, testInfo) => {
+  await selectFile(page)
+  await page.getByRole('button', { name: 'Convert file', exact: true }).click()
+  await expect(page.getByRole('region', { name: 'Your file is ready' })).toBeVisible()
+  const themes = testInfo.project.use.colorScheme === 'light' ? ['dark', 'light'] : ['light', 'dark']
+  for (const colorScheme of themes) {
+    await page.emulateMedia({ colorScheme })
+    await expectAccessible(page)
+  }
 })
 
 test('reflows long content across narrow and wide layouts with reduced motion', async ({ page }) => {
