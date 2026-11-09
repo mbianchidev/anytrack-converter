@@ -7,7 +7,7 @@
 
 [Quickstart](#quickstart) | [Documentation](docs/README.md) | [Report a bug](.github/ISSUE_TEMPLATE/bug_report.md) | [Request a feature](.github/ISSUE_TEMPLATE/feature_request.md)
 
-![AnyTrack Converter in dark theme after converting sample-tone.wav to MP3 at 192 kbps, with a success message, audio preview, and Download File button](docs/images/anytrack-converter.png)
+![AnyTrack Converter's dark audio workbench, showing sample-tone.wav converted to MP3 at 192 kbps, the completed request, native audio preview, and Download file action](docs/images/anytrack-converter.png)
 
 *The current app after a real conversion of a six-second synthetic tone. No personal recordings or mocked conversion results are shown.*
 
@@ -48,7 +48,7 @@ npm ci
 npm run dev
 ```
 
-Open **http://localhost:3000**, select a file in **Convert Audio**, keep MP3 selected, then select **Convert**. A successful request shows the preview and **Download File** button pictured above.
+Open **http://localhost:3000**, choose or drop a file in **Convert audio**, keep MP3 selected, then select **Convert file**. A successful request shows the preview and **Download file** button pictured above.
 
 The API health check should return `{"status":"healthy","version":"0.1.0"}`:
 
@@ -92,7 +92,7 @@ The browser uses `http://localhost:8080` by default. Set `VITE_API_URL` when sta
 - **Metadata editing:** update artist, title, album, and genre without re-encoding the audio, where the file format supports those tags.
 - **Preview and download:** listen where the browser supports the codec, then save `<normalized-name>_anytrack.<format>`.
 
-See [known limitations](docs/user-guide.md#limitations-and-deployment-safety) for codec support, simulated progress, fade-out behavior, and cleanup.
+See [known limitations](docs/user-guide.md#limitations-and-deployment-safety) for codec support, indeterminate processing feedback, fade-out behavior, and cleanup.
 
 ## Documentation
 
@@ -113,3 +113,5 @@ See [SECURITY.md](SECURITY.md) for private vulnerability reporting and [deployme
 ## License
 
 Licensed under the [MIT License](LICENSE). Created by [Matteo Bianchi](https://github.com/mbianchidev).
+
+Bundled fonts retain their [SIL Open Font License notices](docs/development.md#frontend-design).

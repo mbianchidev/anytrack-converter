@@ -114,17 +114,23 @@ Stop the services with `docker compose down`. Uploaded and generated files are b
 
 ## Use the app
 
-| Tab | Workflow |
+| Tool | Workflow |
 | --- | --- |
-| **Convert Audio** | Choose a file and output format, optionally adjust bitrate or advanced settings, then select **Convert**. |
-| **YouTube to Audio** | Paste a video URL, choose the output format and bitrate, then select **Convert from YouTube**. |
-| **Edit Metadata** | Choose a file, fill in the tags to change, then select **Update Metadata**. Blank fields are omitted, so they do not clear existing tags. |
+| **Convert audio** | Choose or drop one file, set the output format, optionally adjust bitrate or advanced settings, then select **Convert file**. |
+| **YouTube audio** | Paste a video URL, choose the output format and bitrate, then select **Extract audio**. |
+| **Edit metadata** | Choose a file, fill in the tags to change, then select **Save metadata**. Blank or whitespace-only fields are omitted, so they do not clear existing tags. |
 
-Successful requests show a preview and **Download File** button. Browser defaults are MP3, 192 kbps, 44.1 kHz, and stereo. Advanced settings apply only to uploaded-file conversion; variable bitrate is implemented only for MP3.
+Successful requests show a completed-request summary, output filename, audio preview, and **Download file** button. Browser defaults are MP3, 192 kbps, 44.1 kHz, and stereo. Advanced settings apply only to uploaded-file conversion; variable bitrate is implemented only for MP3 and maps the bitrate setting to a quality level, not a fixed output bitrate.
+
+The source-to-output strip summarizes the input and requested settings. A selected file is shared between conversion and metadata editing, and entered settings survive tool changes. Changing the source or switching tools clears previous results. Changing output settings does not rename an already completed result.
+
+Processing feedback is indeterminate because the API does not report progress. Inputs and tool switching are disabled until the request finishes; download actions are also protected against duplicate requests. Failures keep the input available for retry. If browser playback is unsupported, the preview explains it and download remains available.
+
+The layout stacks on narrow screens and uses side-by-side source/settings panels when space allows. Light and dark themes follow the browser's system preference; there is no in-app theme selector.
 
 MP3, OGG, AAC, and M4A expose a bitrate slider. WAV is uncompressed and FLAC is lossless. Input compatibility depends on FFmpeg; browser preview support is a separate limitation.
 
-Downloads use `<normalized-name>_anytrack.<format>`; the app lowercases names, replaces spaces with dashes, and removes unsupported characters. Only download or convert content you have permission to use, and follow the source service's terms.
+Downloads use `<normalized-name>_anytrack.<format>`; the app lowercases names, replaces spaces with dashes, and removes unsupported characters. If no supported name characters remain, it uses `audio`. Only download or convert content you have permission to use, and follow the source service's terms.
 
 ## Configuration
 
@@ -162,7 +168,7 @@ The URL must be reachable by the **browser**, not just by another container. If 
 - **Not hardened for public access:** the API has no authentication, rate limiting, application-level upload quota, or strict URL/format validation, and CORS allows any origin. Restrict network access. Public deployment requires additional controls and HTTPS; CORS alone is not access control.
 - **Local storage needs maintenance:** generated files are not automatically expired or deleted after download. Input cleanup is attempted on successful conversion and some other paths, but failures can leave uploads or partial outputs behind. Monitor both directories and remove files only when no request or download is using them.
 - **Requests perform the work directly:** FFmpeg and yt-dlp run synchronously inside request handlers. There is no queue, cancellation, or per-job resource isolation. Large files can occupy a worker and consume substantial RAM, disk, and CPU.
-- **Progress is approximate:** the UI simulates percentages; it does not receive actual FFmpeg or yt-dlp progress.
+- **Processing has no measured progress:** the UI shows an indeterminate activity indicator and status text, not percentages or invented processing stages.
 - **Fade-out is not an end-of-track fade:** the existing option uses `afade=t=out:d=3` without a start time, so it fades from the beginning rather than the final three seconds. Fade-in is fixed at three seconds.
 - **Media support varies:** FFmpeg selects encoders from its installed build. OGG may contain FLAC rather than Vorbis, in which case the bitrate setting does not apply. Metadata support depends on the container, and some output formats cannot play in every browser. YouTube extraction downloads video before conversion and depends on yt-dlp, network access, and upstream availability. Keep the media tools current.
 

@@ -6,7 +6,7 @@ AnyTrack Converter targets **WCAG 2.2 Level AA** for its web interface and docum
 
 - Use native buttons, inputs, labels, radio groups, checkboxes, and audio controls. Keep every control named and keyboard-operable.
 - Keep a logical Tab order, visible focus in both themes, and a skip link to the main content. Avoid keyboard traps and positive `tabIndex` values.
-- Announce request results through the status region. Expose expanded and pressed states and identify progress as approximate, not measured processing progress.
+- Announce processing and request results through the persistent status region. Expose expanded and pressed states. Use indeterminate activity feedback when the API reports no progress; do not invent percentages or processing stages.
 - Meet 4.5:1 contrast for normal text and 3:1 for large text and necessary control boundaries. Check input placeholders, hover, focus, success, and error states separately in light and dark themes.
 - Convey state through text or native control state, not color alone.
 - Support narrow layouts and zoom/reflow without hiding essential controls. Keep touch targets usable and honor reduced-motion preferences.
@@ -18,7 +18,7 @@ Follow the [developer accessibility checks](docs/development.md#accessibility-ch
 
 ## Known limitations
 
-- Progress percentages are simulated, and are described as approximate.
+- The API does not report processing progress; activity feedback is indeterminate.
 - Audio playback support depends on the browser and output codec; download remains available when preview is unsupported.
 - Native media/file controls vary by browser and operating system.
 - A full assistive-technology audit across browsers and screen readers has not been completed. Report the browser, operating system, affected workflow, and assistive technology when relevant.
