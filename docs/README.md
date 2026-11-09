@@ -13,6 +13,7 @@
 ## For developers
 
 - [Setup and architecture](development.md#setup-and-architecture).
+- [Frontend workbench design and font notices](development.md#frontend-design).
 - [Format, lint, test, and build checks](development.md#quality-checks).
 - [Accessibility verification](development.md#accessibility-checks).
 - [Local container builds and release scope](development.md#local-container-builds-and-releases).
