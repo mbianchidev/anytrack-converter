@@ -1,34 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#245d96"/>
-      <stop offset="100%" style="stop-color:#1c2d43"/>
-    </linearGradient>
-    <linearGradient id="noteGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#ffffff"/>
-      <stop offset="100%" style="stop-color:#edf4fc"/>
-    </linearGradient>
-  </defs>
-  
-  <!-- Background circle -->
-  <circle cx="32" cy="32" r="30" fill="url(#bgGrad)"/>
-  
-  <!-- Musical note (centered) -->
-  <g fill="url(#noteGrad)">
-    <!-- Note head (ellipse) -->
-    <ellipse cx="26" cy="44" rx="7" ry="5" transform="rotate(-20 26 44)"/>
-    <!-- Note stem -->
-    <rect x="31" y="18" width="3" height="28" rx="1"/>
-    <!-- Note flag -->
-    <path d="M34 18 Q44 22 44 32 Q42 28 34 24 Z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="AnyTrack Converter">
+  <defs><linearGradient id="atc-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2F6FB0"/><stop offset="1" stop-color="#1C2D43"/></linearGradient></defs>
+  <circle cx="32" cy="32" r="30" fill="url(#atc-bg)"/>
+  <g fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round">
+    <path d="M13.2 25.2A20 20 0 0 1 49.6 22.5"/>
+    <path d="M50.8 38.8A20 20 0 0 1 14.4 41.5"/>
   </g>
-  
-  <!-- Simple circular arrows -->
-  <g fill="#ffffff" opacity="0.85">
-    <!-- Top curved arrow (clockwise, pointing right) -->
-    <path d="M56 24 C56 12 44 5 32 5 C22 5 14 10 10 17 L12 18 C15 12 22 8 32 8 C42 8 52 14 52 24 L49 24 L54 30 L59 24 Z"/>
-    
-    <!-- Bottom curved arrow (clockwise, pointing left) -->
-    <path d="M8 40 C8 52 20 59 32 59 C42 59 50 54 54 47 L52 46 C49 52 42 56 32 56 C22 56 12 50 12 40 L15 40 L10 34 L5 40 Z"/>
+  <path d="M44.6 19.2 53.6 18.2 51.4 27Z M19.4 44.8 10.4 45.8 12.6 37Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="1.5" stroke-linejoin="round"/>
+  <g fill="#FFFFFF">
+    <ellipse cx="28.4" cy="39" rx="5.6" ry="4.3" transform="rotate(-22 28.4 39)"/>
+    <path d="M32.2 21.5h3v17.6h-3z"/>
+    <path d="M35.2 21.5c0 4 6.5 4.6 6.5 10.2-1.6-2.9-3.8-4-6.5-4.4z"/>
   </g>
 </svg>
